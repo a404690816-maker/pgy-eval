@@ -407,6 +407,28 @@ a.pb-cell-link{color:#1F5FBF;cursor:pointer;text-decoration:underline;text-under
 .pb-oc-h{font-size:12.5px;font-weight:700;color:#3B4650;margin:8px 0 2px}
 .pb-oc-note{font-size:12.5px;color:#2F5597;background:#EEF3FB;border-radius:8px;padding:6px 10px;margin:6px 0 0}
 
+.login-page{max-width:1240px;margin:0 auto;padding:28px 24px 40px}
+.login-hero{display:grid;grid-template-columns:1.05fr 1fr;min-height:min(680px,calc(100vh - 130px));background:var(--card);border:1px solid var(--line);border-radius:28px;overflow:hidden;box-shadow:var(--shadow)}
+.login-copy{padding:64px 56px;display:flex;flex-direction:column;justify-content:center}
+.login-copy h1{font-family:var(--font-display);font-weight:200;font-size:clamp(46px,6vw,84px);line-height:1;letter-spacing:.01em;margin:22px 0 22px;text-transform:uppercase}
+.login-copy h1 em{color:var(--coral);font-style:normal}
+.login-copy .sub{font-size:22px;letter-spacing:.06em;margin-bottom:12px}
+.login-copy .sub2{color:var(--ink-2);max-width:34ch;margin:0}
+.login-org{margin-top:40px;font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:2px}
+.login-org b{font-size:20px;color:var(--ink);letter-spacing:.12em;font-weight:600}
+.login-art{position:relative;background:var(--paper);display:flex;align-items:center;justify-content:center;padding:40px}
+.login-art svg{position:absolute;inset:0;width:100%;height:100%}
+.login-card{position:relative;z-index:1;width:min(380px,100%);background:rgba(255,255,255,.96);backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:20px;padding:30px 30px 24px;box-shadow:0 20px 50px rgba(35,40,44,.12);display:flex;flex-direction:column;gap:12px}
+.login-card h2{margin:0;font-size:21px;letter-spacing:.04em}
+.login-card p{margin:0}
+.login-card .field{display:flex;flex-direction:column;gap:5px}
+.login-card input{border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:16px;background:#fff;color:var(--ink);font-family:inherit}
+.login-card input:focus{border-color:var(--coral);outline:none;box-shadow:0 0 0 3px var(--coral-soft)}
+.login-card .btn{justify-content:center;padding:11px 18px;font-size:15px;margin-top:4px}
+.login-msg{min-height:20px;color:#B4442A;font-size:13px}
+.login-help{line-height:1.7;margin-top:4px!important}
+@media (max-width:900px){.login-hero{grid-template-columns:1fr}.login-copy{padding:40px 28px}.login-art{min-height:520px}}
+
 </style>
 </head>
 <body>
@@ -2897,8 +2919,8 @@ if(me.admin){
   const fa = window.pAdmin;
   window.pAdmin = function(){
     setTimeout(loadLinks, 0);
-    return `<div class="card" style="margin-bottom:18px"><div class="card-head"><div><h3>個人專屬連結（Teams 通知用）</h3>
-      <div class="xs muted">每人一條，不需密碼；連結外流時按「重發」，舊連結立即失效。</div></div>
+    return `<div class="card" style="margin-bottom:18px"><div class="card-head"><div><h3>登入碼與個人專屬連結（Teams 通知用）</h3>
+      <div class="xs muted">一般教師、學員只需人事號；主任、組長、專員、導師、管理者第一次用初始碼（或個人連結）登入後自行設定登入碼。外流或忘記時按「重發」：連結換新、登入碼回到新的初始碼。</div></div>
       <button class="btn sm ghost" onclick="copyAllLinks()">複製全部（Excel 可貼上）</button></div><div id="links-box" class="small muted">讀取中…</div></div>` + fa();
   };
   let LINKS = [];
@@ -2907,15 +2929,15 @@ if(me.admin){
     const box = document.getElementById('links-box'); if(!box) return;
     try{ LINKS = await api('api_admin_links', {}); }catch(e){ box.textContent = '讀取失敗'; return; }
     
-    box.innerHTML = `<div class="table-wrap" style="max-height:360px;overflow:auto"><table><thead><tr><th>姓名</th><th>人事號</th><th>Teams 通知對象</th><th class="n">本批問卷</th><th>連結</th><th></th></tr></thead><tbody>${
+    box.innerHTML = `<div class="table-wrap" style="max-height:360px;overflow:auto"><table><thead><tr><th>姓名</th><th>人事號</th><th>Teams 通知對象</th><th class="n">本批問卷</th><th>登入碼</th><th>連結</th><th></th></tr></thead><tbody>${
       LINKS.map(p => `<tr><td>${esc(p.name)}</td><td class="num">${esc(p.pid)}</td><td class="small">${esc(p.teams_to ? p.teams_to + '（代收）' : (p.email || '—'))}</td>
-        <td class="n num">${p.tasks ? p.done + ' / ' + p.tasks : ''}</td>
+        <td class="n num">${p.tasks ? p.done + ' / ' + p.tasks : ''}</td><td class="num">${p.needs_pin ? (p.pin_set ? '<span class="pill sage">本人已設定</span>' : `初始碼 ${esc(p.pin || '')}`) : '<span class="xs muted">只需人事號</span>'}</td>
         <td><button class="btn sm ghost" onclick="copyLink('${p.pid}')">複製連結</button></td>
         <td><button class="link-btn" onclick="reissue('${p.pid}')">重發</button></td></tr>`).join('')}</tbody></table></div>`;
   }
   const linkOf = p => `${base}?t=${p.token}`;
   window.copyLink = pid => { const p = LINKS.find(x => x.pid === pid); navigator.clipboard.writeText(linkOf(p)).then(() => toast('已複製 ' + p.name + ' 的連結')); };
-  window.copyAllLinks = () => { navigator.clipboard.writeText(['姓名\t人事號\tmail\tTeams 通知對象\t連結', ...LINKS.map(p => [p.name, p.pid, p.email || '', p.teams_to || '本人', linkOf(p)].join('\t'))].join('\n')).then(() => toast('已複製全部連結')); };
+  window.copyAllLinks = () => { navigator.clipboard.writeText(['姓名\t人事號\tmail\tTeams 通知對象\t登入碼\t連結', ...LINKS.map(p => [p.name, p.pid, p.email || '', p.teams_to || '本人', p.needs_pin ? (p.pin_set ? '本人已設定' : '初始碼 ' + (p.pin || '')) : '只需人事號', linkOf(p)].join('\t'))].join('\n')).then(() => toast('已複製全部連結')); };
   window.reissue = async pid => { if(!confirm('重發後，這個人原本的連結會立即失效。確定？')) return; try{ await api('api_admin_reissue', { who: pid }); toast('已重發'); loadLinks(); }catch(e){ fail(e); } };
 }
 
@@ -2940,15 +2962,88 @@ window.__CFG = { url: 'https://ahsaodrjvojonmvdldfv.supabase.co', key: 'sb_publi
     if(!r.ok) throw new Error((j && (j.message || j.hint)) || ('HTTP ' + r.status));
     return j;
   };
-  const gate = msg => { document.getElementById('app-root').innerHTML = `<div class="batch-login"><div class="card" style="max-width:460px;margin:60px auto;text-align:center">
-      <h2 style="font-size:20px">臨床病理部教學評核整合平台</h2>
-      <p class="small muted">${msg}</p>
-      <p class="xs muted">請從 Teams 通知中的「個人專屬連結」開啟本網站。連結僅限本人使用，請勿轉傳。</p></div></div>`; };
+  const gate = msg => {
+    const rb=document.querySelector('.demo-bar'); if(rb) rb.style.display='none'; const mm=document.getElementById('main'); if(mm) mm.style.display='none';
+    document.getElementById('app-root').outerHTML = `<main id="app-root" class="login-page">
+      <section class="login-hero">
+        <div class="login-copy">
+          <div class="eyebrow">Beyond Evaluation</div>
+          <h1>Beyond<br>Evaluation<em>.</em></h1>
+          <div class="sub">不只是評核，而是看見教學成長</div>
+          <p class="sub2">以多元觀點、數據分析與學習歷程，支持每一位臨床教師與 PGY 學員持續精進。</p>
+          <div class="login-org">奇美醫院・柳營 <b>臨床病理部</b><span>Department of Clinical Pathology</span></div>
+        </div>
+        <div class="login-art" aria-hidden="true">
+          <svg viewBox="0 0 600 520" preserveAspectRatio="xMidYMid slice">
+            <defs><linearGradient id="lgc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F0A68E"/><stop offset="1" stop-color="#E07A5F"/></linearGradient>
+            <linearGradient id="lgs" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#C9DCDA"/><stop offset="1" stop-color="#8FB2B0"/></linearGradient></defs>
+            <path d="M600 0 L600 300 C520 230 470 110 380 60 C330 32 300 12 290 0 Z" fill="url(#lgs)" opacity=".85"/>
+            <path d="M0 520 C60 380 170 300 310 300 C450 300 540 380 600 450 L600 520 Z" fill="url(#lgc)" opacity=".9"/>
+            <path d="M0 520 C40 470 80 410 170 400 C260 392 290 470 350 520 Z" fill="#F7DDD3"/>
+            <circle cx="170" cy="150" r="60" fill="none" stroke="#E07A5F" stroke-width="1" opacity=".5"/>
+          </svg>
+          <form class="login-card" onsubmit="event.preventDefault();window.__login()">
+            <h2>登入教學評核平台</h2>
+            <p class="small muted">請輸入您的人事號</p>
+            <div class="field"><label for="lg-pid">人事號</label><input id="lg-pid" autocomplete="username" placeholder="例如 931070" required oninput="document.getElementById('lg-pin-f').style.display='none';document.getElementById('lg-pin').value=''"></div>
+            <div class="field" id="lg-pin-f" style="display:none"><label for="lg-pin">登入碼</label><input id="lg-pin" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" placeholder="6 位數字"></div>
+            <div id="lg-msg" class="login-msg">${msg||''}</div>
+            <button class="btn coral" type="submit" id="lg-btn">登入</button>
+            <p class="xs muted login-help">主任、組長、專員、導師與管理者需另輸入自己設定的 6 位數登入碼。<br>也可直接點 Teams 通知中的個人連結登入；問題請洽教學品保組 a40469。</p>
+          </form>
+        </div>
+      </section>
+    </main>`;
+    setTimeout(()=>{ const i=document.getElementById('lg-pid'); i&&i.focus(); }, 50);
+  };
+  const pinForm = (title, desc, cancel) => `<form class="login-card" onsubmit="event.preventDefault();window.__savePin()" style="margin:0 auto">
+      <h2>${title}</h2><p class="small muted">${desc}</p>
+      <div class="field"><label for="sp-1">新的登入碼（6 位數字）</label><input id="sp-1" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" required></div>
+      <div class="field"><label for="sp-2">再輸入一次</label><input id="sp-2" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" required></div>
+      <div id="sp-msg" class="login-msg"></div>
+      <button class="btn coral" type="submit" id="sp-btn">儲存登入碼</button>
+      ${cancel ? '<button class="btn ghost" type="button" onclick="closeModal()">取消</button>' : ''}
+      <p class="xs muted login-help">請勿使用 123456、000000 這類容易被猜到的數字。登入碼只有您自己知道，管理者也看不到；忘記時請 a40469 重發初始登入碼。</p></form>`;
+  window.__savePin = async () => {
+    const a=document.getElementById('sp-1').value.trim(), b2=document.getElementById('sp-2').value.trim(), m=document.getElementById('sp-msg');
+    if(!/^\d{6}$/.test(a)){ m.textContent='登入碼須為 6 位數字'; return; }
+    if(a!==b2){ m.textContent='兩次輸入不一樣'; return; }
+    try{ await __API('api_set_pin', { newpin: a }); }catch(e){ m.textContent=e.message; return; }
+    if(window.__APPINIT && document.getElementById('modal')){ try{ closeModal(); }catch(_){} if(window.toast) toast('登入碼已更新'); window.__PIN.pin_set=true; return; }
+    location.reload();
+  };
+  window.__changePin = () => openModal(pinForm('變更登入碼', '設定新的 6 位數登入碼，下次登入時使用。', true));
+  window.__login = async () => {
+    const pid=document.getElementById('lg-pid').value.trim(), pin=document.getElementById('lg-pin').value.trim(), m=document.getElementById('lg-msg'), b=document.getElementById('lg-btn');
+    const pf=document.getElementById('lg-pin-f');
+    if(!pid){ m.textContent='請輸入人事號'; return; }
+    if(pf.style.display!=='none' && !pin){ m.textContent='請輸入登入碼'; document.getElementById('lg-pin').focus(); return; }
+    b.disabled=true; b.textContent='登入中…'; m.textContent='';
+    try{
+      const r = await fetch(`${__CFG.url}/rest/v1/rpc/api_login`, { method:'POST',
+        headers: Object.assign({ apikey: __CFG.key, 'Content-Type':'application/json' }, /^eyJ/.test(__CFG.key) ? { Authorization: 'Bearer ' + __CFG.key } : {}),
+        body: JSON.stringify({ pid, pin: pin || null }) });
+      const j = await r.json().catch(()=>null);
+      if(j && j.need_pin && !j.error){ pf.style.display=''; pf.querySelector('label').textContent = j.first ? '初始登入碼' : '登入碼';
+        m.textContent = j.first ? '第一次登入：請輸入 a40469 提供的初始登入碼，登入後再設定您自己的登入碼。' : '此帳號需要登入碼'; b.disabled=false; b.textContent='登入'; document.getElementById('lg-pin').focus(); return; }
+      if(!r.ok || !j || j.error || !j.tok){ if(j&&j.need_pin) pf.style.display=''; m.textContent = (j && (j.error || j.message)) || '登入失敗，請稍後再試'; b.disabled=false; b.textContent='登入'; return; }
+      try{ localStorage.setItem('pgy-tok', j.tok); }catch(e){}
+      location.replace(location.pathname);
+    }catch(e){ m.textContent='連線失敗，請確認網路後再試'; b.disabled=false; b.textContent='登入'; }
+  };
   const num = v => (v === null || v === undefined || v === '') ? '' : (isNaN(+v) ? v : +v);
   async function boot(){
-    if(!tok) return gate('尚未登入。');
-    let d; try{ d = await __API('api_bootstrap', {}); }catch(e){ return gate(/token/i.test(e.message) ? '這個連結已失效，請向 a40469 索取新連結。' : '連線失敗：' + e.message); }
+    if(!tok) return gate('');
+    let d; try{ d = await __API('api_bootstrap', {}); }catch(e){ try{ localStorage.removeItem('pgy-tok'); }catch(_){} return gate(/token/i.test(e.message) ? '這個連結已失效，請用人事號與登入碼登入。' : '連線失敗，請稍後再試。'); }
     const me = d.me;
+    let ps = { needs_pin:false, pin_set:true }; try{ ps = await __API('api_pin_status', {}); }catch(e){}
+    window.__PIN = ps;
+    if(ps.needs_pin && !ps.pin_set){
+      const rb=document.querySelector('.demo-bar'); if(rb) rb.style.display='none'; const mm=document.getElementById('main'); if(mm) mm.style.display='none';
+      document.getElementById('app-root').outerHTML = `<main id="app-root" class="login-page"><section class="login-hero" style="grid-template-columns:1fr;min-height:auto;padding:60px 20px;background:var(--paper)">
+        ${pinForm(`${me.name}，請設定您的登入碼`, '您的帳號可以查看較多人員的評核資料，因此需要登入碼。請設定一組只有您知道的 6 位數字，之後登入時使用。', false)}</section></main>`;
+      return;
+    }
     const roles = me.pid === '960360' ? ['admin'] : me.admin ? ['qa'] : me.student ? ['student'] : (me.mentees || []).length ? ['teacher','mentor'] : ['teacher'];
     const tasks = (d.tasks || []).map(t => ({ id:t.id, batch:t.batch, survey:t.survey, target:t.target, targetDept:t.target_dept, evalGroup:t.eval_group,
       raterRole:t.rater_role, period:t.period, due:t.due, status:t.status, teacherName:t.teacher_name || '', courseType:t.course_type || 'general',
@@ -2959,7 +3054,7 @@ window.__CFG = { url: 'https://ahsaodrjvojonmvdldfv.supabase.co', key: 'sb_publi
       real: { roster: d.roster, courses: (d.courses || []).map(c => ({ ...c, dbid: c.id, sv: c.sv || [], date: c.date || '', planned: c.planned || '', place: c.place || '', student: c.student || '', teacher: c.teacher || '' })),
               grades: (d.grades || []).map(g => ({ ...g, res: num(g.res), std: num(g.std), note: g.note || '' })), surveys },
       batch: { batch: tasks[0] ? tasks[0].batch : ((d.progress && d.progress.batch) || '—'), send: '', due: tasks[0] ? tasks[0].due : '', people: { [me.pid]: { name: me.name, tasks } } } };
-    document.getElementById('who-bar').textContent = `${me.name}（${me.pid}）已登入`;
+    document.getElementById('who-bar').innerHTML = `${me.name}（${me.pid}）已登入` + (ps.needs_pin ? ' <a href="#" onclick="window.__changePin();return false" style="color:inherit;margin-left:10px">變更登入碼</a>' : '');
     document.getElementById('app-root').remove();
     for(const id of ['app-code', 'prod-code']){ const s = document.createElement('script'); s.textContent = document.getElementById(id).textContent; document.body.appendChild(s); }
     window.__APPINIT(); window.__PROD_AFTER && window.__PROD_AFTER();
