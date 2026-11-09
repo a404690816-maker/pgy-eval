@@ -2575,7 +2575,16 @@ PB.ai = PB.ai || {};
 let PB_SAMPLE=null; (async()=>{ for(let i=0;i<30 && !(window.claude&&window.claude.use);i++) await new Promise(r=>setTimeout(r,200)); try{ PB_SAMPLE = window.claude && window.claude.use ? await window.claude.use('sample') : null; }catch(e){ PB_SAMPLE=null; } if(PB_SAMPLE && location.hash==='#stats') render(); })();
 const fbClean = L => L.filter(r=>r.fb && !/^(無|無意見|none|-|—)$/i.test(String(r.fb).trim()));
 function pbFeedbackBlock(k,L){
-  return PB.ver==='old' ? pbRelated(k,L) : `<div class="pb-stack">${pbRelated(k,L)}${pbAnnual(k,L)}</div>`;
+  const mine = !isMgr() && (k==='t360'||k==='t2s');   // 本人：教師看自己的 360、學員看教師對學員的年度總回饋（簽核後才出現）
+  if(PB.ver==='old') return mine ? `<div class="pb-stack">${pbRelated(k,L)}${pbMyAnnual(k)}</div>` : pbRelated(k,L);
+  return `<div class="pb-stack">${pbRelated(k,L)}${mine ? pbMyAnnual(k) : pbAnnual(k,L)}</div>`;
+}
+function pbMyAnnual(k){
+  const L=(window.MY_ANNUAL||[]).filter(x=>x.k===k).sort((a,b)=>(b.mine?1:0)-(a.mine?1:0));
+  const all = L.some(x=>!x.mine), nm = x => k==='t360' ? x.teacher : x.student;
+  const body = L.length ? L.map(x=>`${all?`<div style="margin:0 0 4px"><b>${esc(nm(x)||x.target||'')}</b>${x.mine?' <span class="pill sage">本人</span>':''}</div>`:''}<div class="pb-ai" style="white-space:pre-wrap">${esc(x.text||'')}</div><div class="xs muted" style="margin:6px 0 14px">${esc(x.year||'')} 年度${x.n?'・'+x.n+' 份回覆':''}${x.score!=null&&x.score!==''?'・整體 '+fx(+x.score)+' 分':''}｜教學計畫主持人 ${esc(x.who||'')} 簽核於 ${esc(x.at||'')}</div>`).join('')
+    : '<p class="pb-note">年度總回饋經教學計畫主持人簽核後，會顯示在這裡。</p>';
+  return pbCard(all ? `年度總回饋（已簽核・${L.length} 份）` : '我的年度總回饋', body);
 }
 // 一、相關回饋：新版依五個質性面向 × 三個方向統計，舊版為自由文字
 function pbRelated(k,L){
@@ -2914,6 +2923,9 @@ window.doReject = async function(id){
   const v = document.getElementById('rj').value.trim(); if(!v){ toast('請填寫退回原因'); return; }
   try{ await api('api_change_act', { cid: id, act: 'reject', note: v }); closeModal(); toast('已退回'); setTimeout(reload, 600); }catch(e){ fail(e); }
 };
+
+/* 本人的年度總回饋（960360 簽核後才開放：教師→自己的 360；學員→教師對學員） */
+api('api_my_annual', {}).then(r => { window.MY_ANNUAL = r || []; if(window.MY_ANNUAL.length && typeof render === 'function') render(); }).catch(() => { window.MY_ANNUAL = []; });
 
 /* 年度總回饋與簽核：存回資料庫（簽核限 960360，資料庫端也會檢查） */
 if(me.admin){
