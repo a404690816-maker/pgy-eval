@@ -1098,13 +1098,15 @@ function pChange(){
   if(r==='student') list=CHANGES.filter(c=>c.student===meStu());
   if(r==='teacher' && !pbIsSup(meT())) list=CHANGES.filter(c=>c.teacher===meT());
   if(r==='mentor') list=CHANGES.filter(c=>(PB.mentees||[]).includes(c.student));
-  const myCourses=CRS().filter(c=>SENDS(c) && c.student===meStu() && c.status==='已排定' && !pendingOf(c.id));
+  const myCourses=CRS().filter(c=>SENDS(c) && c.student===meStu() && c.status!=='已取消' && !pendingOf(c.id));
+  const myStages=[...new Set(myCourses.map(c=>c.stage))];
+  const optTag=c=>c.status==='已排定'?'':c.status==='已授課'?'（已授課 '+c.date.slice(5).replace('-','/')+'）':'（未排定）';
   const form = r==='student' ? `
     <div class="card"><div class="card-head"><h3>提出 QP019-15 訓練課程時間異動</h3><span class="xs muted">表單編修日期 2026.03.04</span></div>
       <div class="grid g2">
         <div class="field"><label>姓名</label><input readonly value="${esc(meStu())}（登入帶入）"></div>
         <div class="field"><label>訓練期間</label><input readonly value="2026/09/01 – 2027/08/31"></div>
-        <div class="field"><label for="x-course">課程</label><select id="x-course" onchange="render()">${myCourses.map(c=>`<option value="${c.id}" ${$('#x-course')?.value===c.id?'selected':''}>${esc(c.stage)}｜${esc(c.name)}</option>`).join('')}</select></div>
+        <div class="field"><label for="x-course">課程</label><select id="x-course" onchange="render()">${myStages.map(st=>`<optgroup label="${esc(st)}">${myCourses.filter(c=>c.stage===st).map(c=>`<option value="${c.id}" ${$('#x-course')?.value===c.id?'selected':''}>${esc(c.name)}${optTag(c)}</option>`).join('')}</optgroup>`).join('')}</select></div>
         <div class="field"><label>原課程時間（由正式課表帶入，不可修改）</label><input id="x-old" readonly value=""></div>
         <div class="field"><label for="x-d">異動後日期</label><input id="x-d" type="date" value="2026-11-13"></div>
         <div class="field"><label for="x-t">異動後時間</label><input id="x-t" type="time" value="14:00"></div>
@@ -1182,7 +1184,7 @@ function qpExportBlock(r){
     <p class="xs muted" style="margin-top:10px">訓練期間取該學員在此階段所有課程（含異動前後）的最早與最晚日期；超過 10 筆時自動延續到第二頁並重複表頭。</p>
   </div>`;
 }
-pChange.after=()=>{ const s=$('#x-course'); if(s){ const c=CRS().find(x=>x.id===s.value); $('#x-old').value=c?`${c.date.replaceAll('-','/')} ${c.time}`:''; } };
+pChange.after=()=>{ const s=$('#x-course'); if(s){ const c=CRS().find(x=>x.id===s.value); $('#x-old').value=c?(c.date?`${c.date.replaceAll('-','/')} ${c.time||''}`.trim():'未排定'):''; } };
 function changeCard(x){
   const c=CRS().find(k=>k.id===x.course), r=STATE.role;
   const stLabel={t:['待授課教師簽核','warn'],q:['待教學品保組簽核','warn'],ok:['兩關核准，課表已更新','good'],rej:['已退回','bad']}[x.status];
