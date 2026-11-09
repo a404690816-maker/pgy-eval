@@ -3013,7 +3013,10 @@ document.head.appendChild(css);
 
 window.__CFG = { url: 'https://ahsaodrjvojonmvdldfv.supabase.co', key: 'sb_publishable_t66eiIWoglQz1-o4ispMzg_aKj3mn5D' };
 (function(){
-  const u = new URL(location.href); let tok = u.searchParams.get('t');
+  const u = new URL(location.href); let tok = u.searchParams.get('t'); const fromUrl = !!tok;
+  const IDLE_MIN = 30, LAST = 'pgy-last';   // 主任、組長、專員、導師、管理者：閒置 30 分鐘自動登出
+  const idled = u.searchParams.get('idle') === '1'; if(idled){ u.searchParams.delete('idle'); try{ history.replaceState(null, '', u.pathname + u.search + u.hash); }catch(e){} }
+  const idleOut = () => { try{ localStorage.removeItem('pgy-tok'); localStorage.removeItem(LAST); }catch(e){} location.replace(location.pathname + '?idle=1'); };
   try{ if(tok){ localStorage.setItem('pgy-tok', tok); u.searchParams.delete('t'); history.replaceState(null, '', u.pathname + u.search + u.hash); } else tok = localStorage.getItem('pgy-tok'); }catch(e){}
   window.__API = async (fn, args) => {
     const r = await fetch(`${__CFG.url}/rest/v1/rpc/${fn}`, { method:'POST',
@@ -3088,17 +3091,25 @@ window.__CFG = { url: 'https://ahsaodrjvojonmvdldfv.supabase.co', key: 'sb_publi
       if(j && j.need_pin && !j.error){ pf.style.display=''; pf.querySelector('label').textContent = j.first ? '初始登入碼' : '登入碼';
         m.textContent = j.first ? '第一次登入：請輸入 a40469 提供的初始登入碼，登入後再設定您自己的登入碼。' : '此帳號需要登入碼'; b.disabled=false; b.textContent='登入'; document.getElementById('lg-pin').focus(); return; }
       if(!r.ok || !j || j.error || !j.tok){ if(j&&j.need_pin) pf.style.display=''; m.textContent = (j && (j.error || j.message)) || '登入失敗，請稍後再試'; b.disabled=false; b.textContent='登入'; return; }
-      try{ localStorage.setItem('pgy-tok', j.tok); }catch(e){}
+      try{ localStorage.setItem('pgy-tok', j.tok); localStorage.setItem('pgy-last', String(Date.now())); }catch(e){}
       location.replace(location.pathname);
     }catch(e){ m.textContent='連線失敗，請確認網路後再試'; b.disabled=false; b.textContent='登入'; }
   };
   const num = v => (v === null || v === undefined || v === '') ? '' : (isNaN(+v) ? v : +v);
   async function boot(){
-    if(!tok) return gate('');
+    if(!tok) return gate(idled ? `閒置超過 ${IDLE_MIN} 分鐘，已自動登出，請重新登入。` : '');
     let d; try{ d = await __API('api_bootstrap', {}); }catch(e){ try{ localStorage.removeItem('pgy-tok'); }catch(_){} return gate(/token/i.test(e.message) ? '這個連結已失效，請用人事號與登入碼登入。' : '連線失敗，請稍後再試。'); }
     const me = d.me;
     let ps = { needs_pin:false, pin_set:true }; try{ ps = await __API('api_pin_status', {}); }catch(e){}
     window.__PIN = ps;
+    if(ps.needs_pin){
+      const now = Date.now(); let last = 0; try{ last = +localStorage.getItem(LAST) || 0; }catch(e){}
+      if(!fromUrl && last && now - last > IDLE_MIN*60000) return idleOut();
+      const touch = () => { try{ localStorage.setItem(LAST, String(Date.now())); }catch(e){} };
+      touch(); let lt = 0;
+      ['click','keydown','scroll','mousemove','touchstart'].forEach(ev => addEventListener(ev, () => { const t = Date.now(); if(t - lt > 20000){ lt = t; touch(); } }, { passive:true, capture:true }));
+      setInterval(() => { let l = 0; try{ l = +localStorage.getItem(LAST) || 0; }catch(e){} if(l && Date.now() - l > IDLE_MIN*60000) idleOut(); }, 60000);
+    }
     if(ps.needs_pin && !ps.pin_set){
       const rb=document.querySelector('.demo-bar'); if(rb) rb.style.display='none'; const mm=document.getElementById('main'); if(mm) mm.style.display='none';
       document.getElementById('app-root').outerHTML = `<main id="app-root" class="login-page"><section class="login-hero" style="grid-template-columns:1fr;min-height:auto;padding:60px 20px;background:var(--paper)">
