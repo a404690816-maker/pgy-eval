@@ -1566,8 +1566,8 @@ function realReminders(c){
   if(isHist(c)) return '<span class="xs muted">歷史紀錄，不發問卷與提醒</span>';
   if(!c.d) return '<span class="xs muted">未排定，不發提醒</span>';
   const d=parseDT(c.d,'09:00'); if(c.status==='已授課') return '<span class="xs muted">已授課</span>';
-  const r7=at9(addDays(d,-7)), r1=at9(addDays(d,-1)), f=x=> x<TODAY?`<span class="muted">✓ ${fmtD(x).slice(5)}</span>`:`⏱ ${fmtD(x).slice(5)}`;
-  return `<div class="xs">約課 ${f(r7)} 09:00<br>前一天 ${f(r1)} 09:00</div>`;
+  const r1=at9(addDays(d,-1)), f=x=> x<TODAY?`<span class="muted">✓ ${fmtD(x).slice(5)}</span>`:`⏱ ${fmtD(x).slice(5)}`;
+  return `<div class="xs">前一天 ${f(r1)}<br><span class="muted">管理後台貼群組</span></div>`;
 }
 function pCourses(){
   const r=STATE.role, mgr=r==='admin'||r==='qa';
@@ -1588,7 +1588,7 @@ function pCourses(){
       <span class="small muted" style="margin-bottom:10px">顯示 ${list.length} / ${RCv.length} 列</span>
     </div>
     <div class="table-wrap"><table>
-      <thead><tr><th>課程階段／名稱</th><th>組別</th><th>授課教師</th><th>學員</th><th>授課日期</th><th>預訂執行</th><th>狀態</th><th>應建立的問卷</th><th>Teams 提醒</th><th></th></tr></thead>
+      <thead><tr><th>課程階段／名稱</th><th>組別</th><th>授課教師</th><th>學員</th><th>授課日期</th><th>預訂執行</th><th>狀態</th><th>應建立的問卷</th><th>課前提醒</th><th></th></tr></thead>
       <tbody>${list.map(c=>`<tr class="${c.manual?'flag':''}">
         <td><div class="xs muted">${esc(c.stage)}</div>${esc(c.name)}${c.holistic?' <span class="pill coral">全人照護</span>':''}${c.manual?'<div class="xs" style="color:var(--warn)">曾手動修改</div>':''}</td>
         <td class="small">${esc(c.dept)}</td><td>${esc(c.teacher||'—')}</td><td>${esc(c.student||'—')}</td>
@@ -1598,7 +1598,7 @@ function pCourses(){
         <td><div class="row" style="gap:4px">${c.sv.map(s=>`<span class="tag">${SV_SHORT(s)}</span>`).join('')}</div></td>
         <td>${realReminders(c)}</td>
         <td>${mgr?`<button class="btn sm ghost" onclick="openRealEdit('${c.id}')">編輯</button>`:''}</td></tr>`).join('')}</tbody></table></div>
-    <div class="note" style="margin-top:16px">「預訂執行」是原 Excel 的階段預訂日期，「授課日期」是課表上的實際日期；提醒依授課日期計算。課表沒有時間，提醒一律在 09:00。</div>`;
+    <div class="note" style="margin-top:16px">「預訂執行」是原 Excel 的階段預訂日期，「授課日期」是課表上的實際日期；課前提醒：管理者每天在「管理後台 → 明日上課清單」複製訊息貼到科部群組，清單依授課日期即時產生，改期核准後自動更新。</div>`;
 }
 const TEACH_NAMES = () => [...new Set(REAL.roster.filter(p=>p.role==='教師').map(p=>p.n).concat('檢查室臨床教師','永康代訓臨床教師','蔡沛媛'))];
 const STUD_NAMES = () => REAL.roster.filter(p=>p.role==='學員'||p.role==='已結訓學員').map(p=>p.n);
