@@ -1719,7 +1719,10 @@ function stageTeachers(stage){
 }
 const STAGES_360 = () => [...new Set(RC.filter(c=>SENDS(c)&&c.teacher&&c.sv.some(s=>s.includes('360'))).map(c=>c.stage))];
 let ASSIGN = {stage:'共通醫學檢驗', rows:null, sent:{}};
-const peerPool = me => REAL.roster.filter(p=>p.role==='教師' && p.g360===me.g360 && p.n!==me.n && !p.sup);
+/* 115 年度：資歷較淺者（職級「醫檢師」）及龔柏誠暫不擔任 360 評核者（11/9 指示） */
+const NO_360_RATER = ['龔柏誠'];
+const can360Rate = p => p.rank!=='醫檢師' && !NO_360_RATER.includes(p.n);
+const peerPool = me => REAL.roster.filter(p=>p.role==='教師' && p.g360===me.g360 && p.n!==me.n && !p.sup && can360Rate(p));
 function autoAssign(stage){
   const load={}, hload={}; REAL.roster.forEach(p=>{load[p.n]=0;hload[p.n]=0;});
   const least=(c,L)=>{ if(!c.length) return null; c.sort((a,b)=>(L[a]-L[b])||a.localeCompare(b,'zh-Hant')); L[c[0]]++; return c[0]; };
@@ -1744,7 +1747,7 @@ function assignBlock(){
   const pending=rows.reduce((n,r)=>n+(!r.peer)+(!r.promo)+(!r.head),0);
   const load={}; rows.forEach(r=>[r.peer,r.promo].forEach(x=>{ if(x) load[x]=(load[x]||0)+1; }));
   const opts=(r,field)=>{ const me=R(r.t), other=field==='peer'?r.promo:r.peer;
-    const pool=REAL.roster.filter(p=>p.role==='教師' && p.n!==r.t && (field==='promo' ? (p.promo || PROMO_EXTRA.includes(p.n)) : !p.sup)).sort((a,b)=>(a.g360===me.g360?0:1)-(b.g360===me.g360?0:1));
+    const pool=REAL.roster.filter(p=>p.role==='教師' && p.n!==r.t && can360Rate(p) && (field==='promo' ? (p.promo || PROMO_EXTRA.includes(p.n)) : !p.sup)).sort((a,b)=>(a.g360===me.g360?0:1)-(b.g360===me.g360?0:1));
     return `<select aria-label="${field==='peer'?'同儕':'晉階'}評核者" onchange="ASSIGN.rows.find(x=>x.t==='${r.t}').${field}=this.value||null;render()" style="border:1px solid ${r[field]?'var(--line)':'var(--bad)'};border-radius:8px;padding:4px 6px;max-width:190px;background:#fff;color:var(--ink)">
       <option value="">待指定</option>${pool.map(p=>`<option value="${p.n}" ${p.n===r[field]?'selected':''} ${p.n===other?'disabled':''}>${p.n}｜${p.g360===me.g360?'':p.g360+'・'}${p.rank||'—'}</option>`).join('')}</select>`; };
   const sent=A.sent[A.stage];
@@ -2921,17 +2924,32 @@ if(me.admin){
     setTimeout(loadLinks, 0);
     return `<div class="card" style="margin-bottom:18px"><div class="card-head"><div><h3>登入碼與個人專屬連結（Teams 通知用）</h3>
       <div class="xs muted">一般教師、學員只需人事號；主任、組長、專員、導師、管理者第一次用初始碼（或個人連結）登入後自行設定登入碼。外流或忘記時按「重發」：連結換新、登入碼回到新的初始碼。</div></div>
-      <button class="btn sm ghost" onclick="copyAllLinks()">複製全部（Excel 可貼上）</button></div><div id="links-box" class="small muted">讀取中…</div></div>` + fa();
+      <button class="btn sm ghost" onclick="copyAllLinks()">複製全部（Excel 可貼上）</button></div>
+      <div id="links-filter" style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 12px"></div>
+      <div id="links-box" class="small muted">讀取中…</div></div>` + fa();
   };
   let LINKS = [];
-  const base = location.origin + location.pathname;
+  const base = 'https://a404690816-maker.github.io/pgy-eval/';   // 一律產生線上網址（避免從本機檔案複製到 file:/// 連結）
   async function loadLinks(){
     const box = document.getElementById('links-box'); if(!box) return;
     try{ LINKS = await api('api_admin_links', {}); }catch(e){ box.textContent = '讀取失敗'; return; }
     
-    box.innerHTML = `<div class="table-wrap" style="max-height:360px;overflow:auto"><table><thead><tr><th>姓名</th><th>人事號</th><th>Teams 通知對象</th><th class="n">本批問卷</th><th>登入碼</th><th>連結</th><th></th></tr></thead><tbody>${
-      LINKS.map(p => `<tr><td>${esc(p.name)}</td><td class="num">${esc(p.pid)}</td><td class="small">${esc(p.teams_to ? p.teams_to + '（代收）' : (p.email || '—'))}</td>
-        <td class="n num">${p.tasks ? p.done + ' / ' + p.tasks : ''}</td><td class="num">${p.needs_pin ? (p.pin_set ? '<span class="pill sage">本人已設定</span>' : `初始碼 ${esc(p.pin || '')}`) : '<span class="xs muted">只需人事號</span>'}</td>
+    renderLinks();
+  }
+  let LF = 'todo';
+  window.setLinkFilter = f => { LF = f; renderLinks(); };
+  function renderLinks(){
+    const box = document.getElementById('links-box'), fb = document.getElementById('links-filter'); if(!box) return;
+    const inB = LINKS.filter(p => p.tasks > 0), todo = inB.filter(p => p.done < p.tasks), done = inB.filter(p => p.done >= p.tasks);
+    const sumT = inB.reduce((a,p)=>a+p.tasks,0), sumD = inB.reduce((a,p)=>a+p.done,0);
+    const btn = (k, label) => `<button class="btn sm ${LF===k?'dark':'ghost'}" onclick="setLinkFilter('${k}')">${label}</button>`;
+    if(fb) fb.innerHTML = btn('todo', `本批未完成 ${todo.length} 人`) + btn('done', `本批已完成 ${done.length} 人`) + btn('batch', `本批全部 ${inB.length} 人`) + btn('all', `所有人員 ${LINKS.length} 人`)
+      + `<span class="small muted" style="align-self:center;margin-left:6px">本批問卷進度 ${sumD} / ${sumT} 份</span>`;
+    const rows = LF==='todo' ? [...todo].sort((a,b)=>(b.tasks-b.done)-(a.tasks-a.done)) : LF==='done' ? done : LF==='batch' ? inB : LINKS;
+    if(!rows.length){ box.innerHTML = `<p class="small muted" style="padding:12px 0">${LF==='todo'?'本批問卷已全部完成。':'沒有符合的人員。'}</p>`; return; }
+    box.innerHTML = `<div class="table-wrap" style="max-height:420px;overflow:auto"><table><thead><tr><th>姓名</th><th>人事號</th><th>Teams 通知對象</th><th class="n">本批問卷</th><th>登入碼</th><th>連結</th><th></th></tr></thead><tbody>${
+      rows.map(p => `<tr><td>${esc(p.name)}</td><td class="num">${esc(p.pid)}</td><td class="small">${esc(p.teams_to ? p.teams_to + '（代收）' : (p.email || '—'))}</td>
+        <td class="n num">${p.tasks ? (p.done>=p.tasks ? '<span class="pill sage">'+p.done+' / '+p.tasks+'</span>' : '<b style="color:#B4442A">'+p.done+' / '+p.tasks+'</b>') : ''}</td><td class="num">${p.needs_pin ? (p.pin_set ? '<span class="pill sage">本人已設定</span>' : `初始碼 ${esc(p.pin || '')}`) : '<span class="xs muted">只需人事號</span>'}</td>
         <td><button class="btn sm ghost" onclick="copyLink('${p.pid}')">複製連結</button></td>
         <td><button class="link-btn" onclick="reissue('${p.pid}')">重發</button></td></tr>`).join('')}</tbody></table></div>`;
   }
