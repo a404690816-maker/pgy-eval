@@ -2934,13 +2934,43 @@ if(me.admin){
   /* 管理後台：每個人的專屬連結（Teams 通知用） */
   const fa = window.pAdmin;
   window.pAdmin = function(){
-    setTimeout(loadLinks, 0);
-    return `<div class="card" style="margin-bottom:18px"><div class="card-head"><div><h3>登入碼與個人專屬連結（Teams 通知用）</h3>
+    setTimeout(loadLinks, 0); setTimeout(renderDay, 0);
+    return `<div class="card" style="margin-bottom:18px"><div class="card-head"><div><h3>明日上課清單（貼到科部群組）</h3>
+      <div class="xs muted">依網站正式課表即時產生；學員改期經兩關核准後會自動反映在這裡。</div></div>
+      <div style="display:flex;gap:8px;align-items:center"><input id="day-pick" type="date" value="${DAY}" onchange="setDay(this.value)" style="width:auto">
+      <button class="btn sm ghost" onclick="setDay(dayAdd(1))">明天</button><button class="btn sm coral" onclick="copyDay()">複製訊息</button></div></div>
+      <div id="day-box" class="small muted">讀取中…</div></div>`
+    + `<div class="card" style="margin-bottom:18px"><div class="card-head"><div><h3>登入碼與個人專屬連結（Teams 通知用）</h3>
       <div class="xs muted">一般教師、學員只需人事號；主任、組長、專員、導師、管理者第一次用初始碼（或個人連結）登入後自行設定登入碼。外流或忘記時按「重發」：連結換新、登入碼回到新的初始碼。</div></div>
       <button class="btn sm ghost" onclick="copyAllLinks()">複製全部（Excel 可貼上）</button></div>
       <div id="links-filter" style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 12px"></div>
       <div id="links-box" class="small muted">讀取中…</div></div>` + fa();
   };
+  /* 明日上課清單 */
+  const dayAdd = n => { const d = new Date(); d.setDate(d.getDate()+n); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+  window.dayAdd = dayAdd;
+  let DAY = dayAdd(1);
+  window.setDay = v => { DAY = v || dayAdd(1); const i = document.getElementById('day-pick'); if(i) i.value = DAY; renderDay(); };
+  const dayList = () => (typeof RC !== 'undefined' ? RC : []).filter(c => c.d === DAY && c.student && SENDS(c) && c.status !== '已取消')
+    .sort((a,b) => (a.student+a.name).localeCompare(b.student+b.name, 'zh-Hant'));
+  const dayHead = () => { const d = new Date(DAY+'T00:00:00'), w = '日一二三四五六'[d.getDay()]; return `${d.getMonth()+1}/${d.getDate()}（${w}）`; };
+  function dayText(){
+    const L = dayList(), isTmr = DAY === dayAdd(1);
+    if(!L.length) return `【PGY 上課提醒】${isTmr?'明天 ':''}${dayHead()} 沒有排定的 PGY 課程。`;
+    return [`【PGY 上課提醒】${isTmr?'明天 ':''}${dayHead()} 共 ${L.length} 堂 PGY 訓練課程`,
+      ...L.map((c,i) => `${i+1}. ${c.student}｜${c.name}（${c.stage}）\n   授課教師：${c.teacher}${c.time?'｜時間：'+c.time:''}｜地點：${c.place || '依課表'}`),
+      `如需改期，請學員至教學評核平台「時間異動」提出申請：${base}`].join('\n');
+  }
+  function renderDay(){
+    const box = document.getElementById('day-box'); if(!box) return;
+    const L = dayList();
+    box.innerHTML = L.length
+      ? `<div class="table-wrap"><table><thead><tr><th>學員</th><th>課程</th><th>課程階段</th><th>授課教師</th><th>地點</th></tr></thead><tbody>${L.map(c => `<tr><td>${esc(c.student)}</td><td>${esc(c.name)}</td><td class="small">${esc(c.stage)}</td><td>${esc(c.teacher)}</td><td class="small">${esc(c.place || '依課表')}</td></tr>`).join('')}</tbody></table></div>
+         <pre class="small" style="white-space:pre-wrap;background:#F7F3EC;padding:10px 12px;border-radius:8px;margin:12px 0 0">${esc(dayText())}</pre>`
+      : `<p class="small muted" style="padding:8px 0">${dayHead()} 沒有排定的 PGY 課程。</p>`;
+  }
+  window.copyDay = () => navigator.clipboard.writeText(dayText()).then(() => toast('已複製 ' + dayHead() + ' 上課清單，可直接貼到群組'));
+
   let LINKS = [];
   const base = 'https://a404690816-maker.github.io/pgy-eval/';   // 一律產生線上網址（避免從本機檔案複製到 file:/// 連結）
   async function loadLinks(){
