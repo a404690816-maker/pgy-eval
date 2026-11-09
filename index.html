@@ -2610,9 +2610,18 @@ function draftSummary(k,c){
   return `【${c.y}・${c.who}】共 ${c.n} 份回覆，整體 ${fx(c.score)} 分（${band(c.score)}）。${tp?`各類評核者：${tp}。`:''}表現最佳的項目為 ${top}；相對可再加強的是 ${low}。文字回饋 ${c.texts.length} 則，請參考上方相關回饋。\n【精進建議】建議安排相關教育訓練或工作坊：${trainingFor(k,c).join('；')}。（此為規則式草稿；在 claude.ai 開啟網站可由 AI 產生完整總回饋。）`;
 }
 async function genAnnual(k){
+  if(!isMgr()) return;
   const L=PB_AI_L[k]; const c=svContext(k,L), key=aiKey(k);
   if(!PB_SAMPLE){ const t=draftSummary(k,c); PB.ai[key]={text:t,orig:t,by:'草稿'}; render(); return; }
   PB.ai[key]={text:'',loading:true}; render();
+  const prompt=aiPrompt(k,c);
+  try{
+    const out=await PB_SAMPLE(prompt,{modelTier:'default',onText:({text})=>{ PB.ai[key]={text,loading:true}; const el=document.getElementById('ai-out-'+k); if(el) el.textContent=text; }});
+    PB.ai[key]={text:out.text,orig:out.text,by:'AI',at:new Date()};
+  }catch(e){ PB.ai[key]={text:draftSummary(k,c),orig:draftSummary(k,c),by:'草稿',err:e&&e.code==='rate_limited'?'AI 使用次數暫時達上限，先提供草稿。':e&&e.code==='not_granted'?'未同意使用 AI，先提供草稿。':'AI 暫時無法使用，先提供草稿。'}; }
+  render();
+}
+function aiPrompt(k,c){
   const name={t360:'教師 360 度評估',t2s:'醫檢教師對 PGY 學員學習評核',course:'PGY 學員對課程滿意度'}[k];
   const prompt=`你是醫院臨床病理部的教學品質助理。請根據以下「${name}」的統計與文字回饋，用繁體中文寫一段「年度總回饋」，給${k==='t2s'?'學員本人與導師':k==='course'?'課程負責人':'受評教師本人與教學主管'}閱讀。
 要求：
@@ -2627,19 +2636,25 @@ async function genAnnual(k){
 - 整體分數（0–100）：${fx(c.score)}（${band(c.score)}）
 ${c.types?'- 各類評核者：'+c.types.map(x=>`${x[0]} ${x[1]==null?'無':fx(x[1])}（${x[2]} 份）`).join('；')+'\n':''}- 各題平均（高到低）：${c.items.map(x=>`${x[0]} ${fx(x[1])}`).join('；')}
 - 文字回饋：${c.texts.join('｜')||'無'}`;
-  try{
-    const out=await PB_SAMPLE(prompt,{modelTier:'default',onText:({text})=>{ PB.ai[key]={text,loading:true}; const el=document.getElementById('ai-out-'+k); if(el) el.textContent=text; }});
-    PB.ai[key]={text:out.text,orig:out.text,by:'AI',at:new Date()};
-  }catch(e){ PB.ai[key]={text:draftSummary(k,c),orig:draftSummary(k,c),by:'草稿',err:e&&e.code==='rate_limited'?'AI 使用次數暫時達上限，先提供草稿。':e&&e.code==='not_granted'?'未同意使用 AI，先提供草稿。':'AI 暫時無法使用，先提供草稿。'}; }
-  render();
+  return prompt;
+}
+const isMgr = () => STATE.role==='admin'||STATE.role==='qa';
+function copyAIPrompt(k){
+  if(!isMgr()) return;
+  const L=PB_AI_L[k]; if(!L||!L.length) return; const c=svContext(k,L), key=aiKey(k);
+  if(!PB.ai[key]){ const t=draftSummary(k,c); PB.ai[key]={text:t,orig:t,by:'草稿'}; render(); }
+  const txt=aiPrompt(k,c)+'\n\n請直接輸出三段年度總回饋內文，不要加其他說明。';
+  const ok=()=>toast('已複製。請貼到 Claude 對話，再把 AI 寫好的內容貼回下方編輯框');
+  try{ navigator.clipboard.writeText(txt).then(ok,()=>toast('無法自動複製，請稍後再試')); }catch(e){ toast('無法自動複製，請稍後再試'); }
 }
 const PB_AI_L={};
 function pbAnnual(k,L){
   PB_AI_L[k]=L; const key=aiKey(k), a=PB.ai[key], F=pbF('x');
   const yearHint = !F.year||F.year==='全部' ? '<p class="pb-note" style="margin:0 0 8px">建議先在上方篩選「年度」，再產生該年度的總回饋。</p>' : '';
   const body = !L.length ? '<p class="pb-empty">此條件下沒有回覆，無法產生總回饋</p>'
-    : a ? `${a.loading||PB.sign[key]||!(STATE.role==='admin'||STATE.role==='qa')?`<div id="ai-out-${k}" class="pb-ai">${esc(a.text||'產生中…')}</div>`:`<textarea id="ai-edit-${k}" class="pb-ai pb-ai-edit" rows="9" oninput="pbEditAI('${k}',this.value)">${esc(a.text)}</textarea>`}<div class="spread" style="margin-top:8px"><span class="xs muted">${a.loading?'AI 撰寫中…':PB.sign[key]?'已由主持人簽核，內容鎖定':(a.text!==a.orig?'✎ 已手動修改（保留原稿，可還原）':a.by==='AI'?'由 AI 依本頁統計與回饋產生，主持人可直接在框內修改後簽核':'規則式草稿，主持人可直接在框內修改後簽核')}${a.err?'・'+a.err:''}</span>${a.loading||PB.sign[key]?'':`<div class="row">${a.text!==a.orig?`<button class="btn sm ghost" onclick="pbRestoreAI('${k}')">還原原稿</button>`:''}<button class="btn sm ghost" onclick="genAnnual('${k}')">重新產生</button><button class="btn sm ghost" onclick="copyAI('${k}')">複製</button></div>`}</div>`
-    : `<button class="btn coral" onclick="genAnnual('${k}')">${PB_SAMPLE?'✦ 由 AI 產生年度總回饋':'產生年度總回饋草稿'}</button><p class="pb-note" style="margin-top:8px">${PB_SAMPLE?'會把本頁目前篩選範圍的分數與文字回饋交給 AI 彙整（不含評核者姓名）；第一次使用會詢問同意。':'目前環境無法使用 AI（例如下載到電腦開啟），會先產生規則式草稿；在 claude.ai 開啟網站即可使用 AI。'}</p>`;
+    : a ? `${a.loading||PB.sign[key]||!(STATE.role==='admin'||STATE.role==='qa')?`<div id="ai-out-${k}" class="pb-ai">${esc(a.text||'產生中…')}</div>`:`<textarea id="ai-edit-${k}" class="pb-ai pb-ai-edit" rows="9" oninput="pbEditAI('${k}',this.value)">${esc(a.text)}</textarea>`}<div class="spread" style="margin-top:8px"><span class="xs muted">${a.loading?'AI 撰寫中…':PB.sign[key]?'已由主持人簽核，內容鎖定':(a.text!==a.orig?'✎ 已手動修改（保留原稿，可還原）':a.by==='AI'?'由 AI 依本頁統計與回饋產生，主持人可直接在框內修改後簽核':'規則式草稿，主持人可直接在框內修改後簽核')}${a.err?'・'+a.err:''}</span>${a.loading||PB.sign[key]||!isMgr()?'':`<div class="row">${a.text!==a.orig?`<button class="btn sm ghost" onclick="pbRestoreAI('${k}')">還原原稿</button>`:''}${PB_SAMPLE?'':`<button class="btn sm ghost" onclick="copyAIPrompt('${k}')">複製 AI 撰寫用資料</button>`}<button class="btn sm ghost" onclick="genAnnual('${k}')">重新產生</button><button class="btn sm ghost" onclick="copyAI('${k}')">複製</button></div>`}</div>`
+    : !isMgr() ? '<p class="pb-note">年度總回饋由管理者產生，經教學計畫主持人簽核後顯示於此。</p>'
+    : `<div class="row"><button class="btn coral" onclick="genAnnual('${k}')">${PB_SAMPLE?'✦ 由 AI 產生年度總回饋':'產生年度總回饋草稿'}</button>${PB_SAMPLE?'':`<button class="btn ghost" onclick="copyAIPrompt('${k}')">複製 AI 撰寫用資料</button>`}</div><p class="pb-note" style="margin-top:8px">${PB_SAMPLE?'會把本頁目前篩選範圍的分數與文字回饋交給 AI 彙整（不含評核者姓名）；第一次使用會詢問同意。':'「產生草稿」依分數與回饋組出規則式摘要。要用 AI 撰寫：按「複製 AI 撰寫用資料」→ 貼到 Claude 對話 → 把結果貼回編輯框 → 送主持人簽核。資料不含評核者姓名。'}</p>`;
   return pbCard('年度總回饋', yearHint+body+pbSignBox(k,L));
 }
 /* 教學計畫主持人簽核 */
