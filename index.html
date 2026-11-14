@@ -803,7 +803,10 @@ function pHome(){
     ? (mineB.sort((x,y)=>(st(x)==='done')-(st(y)==='done')).slice(0,5).map(t=>`<div class="list-item"><div><b>${esc(lab[t.survey])}｜${esc(t.target)}</b><small>${esc(t.period)}・截止 ${t.due.replaceAll('-','/')}</small></div>${st(t)==='done'?'<span class="pill good">已完成</span>':`<button class="btn sm" onclick="openBatchTask('${esc(me)}','${t.id}')">填寫</button>`}</div>`).join('')
        + (mineB.length>5?`<p class="xs muted" style="margin:10px 0 0">另有 ${mineB.length-5} 份，請到「我的問卷」查看。</p>`:'')) || '<p class="small muted">本批次（11/9）沒有指派給您的問卷。</p>'
     : Object.entries(lab).map(([k,l])=>{ const by=PGS&&PGS.by&&PGS.by[k]; const L=by?{length:by.total}:all.filter(t=>t.survey===k), d=by?by.done:L.filter(t=>st(t)==='done').length; return L.length?`<div class="list-item"><div><b>${l}</b><small>${B.batch}・${L.length} 份</small></div><span class="num small">${d} / ${L.length} 已完成</span></div>`:''; }).join('');
-  const upHtml = upcoming.slice(0,4).map(c=>`<div class="list-item"><div><b>${esc(c.name)}</b><small>${esc(c.stage)}・${esc(c.teacher)}${c.student?'・'+esc(c.student):''}${c.place?'・'+esc(c.place):''}</small></div><span class="num small">${c.d.replaceAll('-','/')}</span></div>`).join('') || '<p class="small muted">近期沒有已排定日期的課程。</p>';
+  const monUp = upcoming.filter(c=>c.d.slice(0,7)===today.slice(0,7));   // 本月、今天起尚未授課
+  const upRow = c=>`<div class="list-item"><div><b>${esc(c.name)}</b><small>${esc(c.stage)}・${esc(c.teacher)}${c.student?'・'+esc(c.student):''}${c.place?'・'+esc(c.place):''}</small></div><span class="num small">${c.d.slice(5).replace('-','/')}（${'日一二三四五六'[new Date(c.d+'T00:00:00').getDay()]}）${c.d===today?' <b style="color:#185FA5">今天</b>':''}</span></div>`;
+  const upHtml = monUp.length ? monUp.slice(0,6).map(upRow).join('') + (monUp.length>6?`<p class="small muted" style="margin:8px 0 0">還有 ${monUp.length-6} 堂，請見課程清單。</p>`:'')
+    : `<p class="small muted">本月已沒有尚未授課的課程。</p>${upcoming[0]?`<p class="xs muted" style="margin:10px 0 4px">下一堂：</p>${upRow(upcoming[0])}`:''}`;
   const picker = r==='admin'||r==='qa' ? '' : pbPicker();
   return `
   <section class="hero">
@@ -835,7 +838,7 @@ function pHome(){
   <div class="grid g4">${stats}</div>
   <div class="grid g2" style="margin-top:18px">
     <div class="card"><div class="card-head"><h3>${me?'我的問卷任務':'本批問卷進度'}</h3><a class="link-btn" href="#forms">全部</a></div>${tasksHtml}</div>
-    <div class="card"><div class="card-head"><h3>近期課程</h3><a class="link-btn" href="#courses">課程管理</a></div>${upHtml}</div>
+    <div class="card"><div class="card-head"><h3>本月未授課課程${monUp.length?` <span class="pill">${monUp.length} 堂</span>`:''}</h3><a class="link-btn" href="#courses">課程清單</a></div>${upHtml}</div>
   </div>`;
 }
 function statTile([v,l,h,page,alert]){ const ok=pageAllowed(page,STATE.role); return `<a class="stat ${alert?'alert':''}" ${ok?`href="#${page}"`:'style="cursor:default"'}><span class="v num">${esc(v)}</span><span class="l">${esc(l)}</span><span class="h">${esc(h)}</span></a>`; }
