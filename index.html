@@ -1596,18 +1596,34 @@ function pCourses(){
       ${[['stage','課程階段',stages],['student','學員',studs],['status','狀態',['全部','待排課','已排定','已授課','已取消']]].map(([k,l,o])=>`<div class="field"><label for="rf-${k}">${l}</label><select id="rf-${k}" onchange="RF.${k}=this.value;render()">${o.map(x=>`<option ${x===RF[k]?'selected':''}>${esc(x)}</option>`).join('')}</select></div>`).join('')}
       <span class="small muted" style="margin-bottom:10px">顯示 ${list.length} / ${RCv.length} 列</span>
     </div>
-    <div class="table-wrap"><table>
-      <thead><tr><th>課程階段／名稱</th><th>組別</th><th>授課教師</th><th>學員</th><th>授課日期</th><th>預訂執行</th><th>狀態</th><th>應建立的問卷</th><th>課前提醒</th><th></th></tr></thead>
-      <tbody>${list.map(c=>`<tr class="${c.manual?'flag':''}">
-        <td><div class="xs muted">${esc(c.stage)}</div>${esc(c.name)}${c.holistic?' <span class="pill coral">全人照護</span>':''}${c.manual?'<div class="xs" style="color:var(--warn)">曾手動修改</div>':''}</td>
-        <td class="small">${esc(c.dept)}</td><td>${esc(c.teacher||'—')}</td><td>${esc(c.student||'—')}</td>
-        <td class="num">${c.d?c.d.replaceAll('-','/'):isHist(c)&&c.planned?`${c.planned.slice(0,4)}/${c.planned.slice(4,6)}<div class="xs muted">僅知月份</div>`:'<span class="muted">未排定</span>'}${c.place?`<div class="xs muted">${esc(c.place)}</div>`:''}</td>
-        <td class="num small muted">${c.planned?c.planned.slice(0,4)+'/'+c.planned.slice(4,6)+'/'+c.planned.slice(6):'—'}</td>
+    ${pcGroups(list,mgr)}
+    <div class="note" style="margin-top:16px">「預訂執行」是原 Excel 的階段預訂日期，「授課日期」是課表上的實際日期；課前提醒：管理者每天在「管理後台 → 明日上課清單」複製訊息貼到科部群組，清單依授課日期即時產生，改期核准後自動更新。</div>`;
+}
+/* 課程清單：依「學員 × 課程階段」分組，組內依授課日期排序（11/15） */
+function pcGroups(list,mgr){
+  if(!list.length) return '<p class="muted" style="padding:12px 0">沒有符合條件的課程。</p>';
+  const key=c=>(c.student||'（未指定學員）')+'｜'+c.stage, G=new Map();
+  list.forEach(c=>{ const k=key(c); if(!G.has(k)) G.set(k,[]); G.get(k).push(c); });
+  const first=L=>L.map(c=>c.d||'9999').sort()[0];
+  const groups=[...G.entries()].map(([k,L])=>({k,stu:L[0].student||'（未指定學員）',stage:L[0].stage,L:L.sort((a,b)=>(a.d||'9999').localeCompare(b.d||'9999')||a.name.localeCompare(b.name,'zh-Hant'))}))
+    .sort((a,b)=>a.stu.localeCompare(b.stu,'zh-Hant')||first(a.L).localeCompare(first(b.L)));
+  const oneStu = RF.student!=='全部';
+  return groups.map(g=>{ const n=g.L.length, t=g.L.filter(c=>c.status==='已授課').length, w=g.L.filter(c=>c.status==='待排課').length, sch=g.L.filter(c=>c.status==='已排定').length;
+    const ds=g.L.map(c=>c.d).filter(Boolean).sort(), span=ds.length?`${ds[0].replaceAll('-','/')}${ds.length>1?' – '+ds[ds.length-1].replaceAll('-','/'):''}`:'尚未排定';
+    return `<details class="card" open style="margin-bottom:14px;padding:14px 18px">
+      <summary class="spread" style="cursor:pointer;gap:10px;flex-wrap:wrap"><div><h3 style="margin:0;font-size:16px">${oneStu?'':esc(g.stu)+'｜'}${esc(g.stage)}</h3><div class="xs muted">${span}</div></div>
+        <span class="row" style="gap:6px"><span class="pill sage">已授課 ${t}/${n}</span>${sch?`<span class="pill">已排定 ${sch}</span>`:''}${w?`<span class="pill coral">待排課 ${w}</span>`:''}</span></summary>
+      <div class="table-wrap" style="margin-top:10px"><table>
+      <thead><tr><th>課程名稱</th><th>組別</th><th>授課教師</th><th>授課日期</th><th>預訂執行</th><th>狀態</th><th>應建立的問卷</th><th>課前提醒</th><th></th></tr></thead>
+      <tbody>${g.L.map(c=>`<tr class="${c.manual?'flag':''}">
+        <td style="min-width:200px">${esc(c.name)}${c.holistic?' <span class="pill coral">全人照護</span>':''}${c.manual?'<div class="xs" style="color:var(--warn)">曾手動修改</div>':''}</td>
+        <td class="small">${esc(c.dept)}</td><td style="white-space:nowrap">${esc(c.teacher||'—')}</td>
+        <td class="num" style="white-space:nowrap">${c.d?c.d.replaceAll('-','/'):isHist(c)&&c.planned?`${c.planned.slice(0,4)}/${c.planned.slice(4,6)}<div class="xs muted">僅知月份</div>`:'<span class="muted">未排定</span>'}${c.place?`<div class="xs muted">${esc(c.place)}</div>`:''}</td>
+        <td class="num small muted" style="white-space:nowrap">${c.planned?c.planned.slice(0,4)+'/'+c.planned.slice(4,6)+'/'+c.planned.slice(6):'—'}</td>
         <td>${pillStatus(c.status)}</td>
         <td><div class="row" style="gap:4px">${c.sv.map(s=>`<span class="tag">${SV_SHORT(s)}</span>`).join('')}</div></td>
         <td>${realReminders(c)}</td>
-        <td>${mgr?`<button class="btn sm ghost" onclick="openRealEdit('${c.id}')">編輯</button>`:''}</td></tr>`).join('')}</tbody></table></div>
-    <div class="note" style="margin-top:16px">「預訂執行」是原 Excel 的階段預訂日期，「授課日期」是課表上的實際日期；課前提醒：管理者每天在「管理後台 → 明日上課清單」複製訊息貼到科部群組，清單依授課日期即時產生，改期核准後自動更新。</div>`;
+        <td>${mgr?`<button class="btn sm ghost" style="white-space:nowrap" onclick="openRealEdit('${c.id}')">編輯</button>`:''}</td></tr>`).join('')}</tbody></table></div></details>`; }).join('');
 }
 const TEACH_NAMES = () => [...new Set(REAL.roster.filter(p=>p.role==='教師').map(p=>p.n).concat('檢查室臨床教師','永康代訓臨床教師','蔡沛媛'))];
 const STUD_NAMES = () => REAL.roster.filter(p=>p.role==='學員'||p.role==='已結訓學員').map(p=>p.n);
