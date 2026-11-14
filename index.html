@@ -419,6 +419,9 @@ a.pb-cell-link{color:#1F5FBF;cursor:pointer;text-decoration:underline;text-under
 .mc-row.past{color:var(--ink-3,#8A8F94)} .mc-row.today{background:#E6F1FB;border-radius:8px;border-bottom-color:transparent}
 @media(max-width:700px){.mc-row{grid-template-columns:78px 56px minmax(0,1fr) 64px;font-size:12.5px}.mc-row>span:nth-child(4){display:none}.mc-row{grid-template-columns:78px 56px minmax(0,1fr) 64px}}
 
+.pg-d{display:inline-flex;flex-direction:column;align-items:center;gap:1px;line-height:1}
+.pg-d small{font-size:10px;color:var(--ink-3,#8A8F94)}
+
 .login-page{max-width:1240px;margin:0 auto;padding:28px 24px 40px}
 .login-hero{display:grid;grid-template-columns:1.05fr 1fr;min-height:min(680px,calc(100vh - 130px));background:var(--card);border:1px solid var(--line);border-radius:28px;overflow:hidden;box-shadow:var(--shadow)}
 .login-copy{padding:64px 56px;display:flex;flex-direction:column;justify-content:center}
@@ -2190,6 +2193,7 @@ function progTabs(cur){
 }
 const PG_DOT = { ok:'#1D9E75', wip:'#EF9F27', bad:'#E24B4A', no:'#CFC8BC', na:'#CFC8BC' };
 const pgDot = (s,t) => `<i title="${t}" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${PG_DOT[s]}"></i>`;
+const pgLab = (d,l) => `<span class="pg-d">${d}<small>${l}</small></span>`;
 const pgIcon = s => s==='ok'?'<span style="color:#1D9E75">✔</span>':s==='bad'?'<span style="color:#C0392B">✘</span>':s==='wip'?'<span style="color:#B7791F">◔</span>':'<span class="muted">—</span>';
 function pgSvRows(k, stu, c){
   return ((REAL.surveys||{})[k]||[]).filter(r=>r.stu===stu && r.course===c.name && (!r.stage || r.stage===c.stage));
@@ -2226,8 +2230,8 @@ function pProgress(){
   if(!PG.sel && studs.length===1){ const f=M[0].cells.find(x=>x && !x.pass) || M[0].cells.find(Boolean); if(f) PG.sel={stu:f.stu,stage:f.stage}; }
   const totalPass = M.reduce((n,m)=>n+m.cells.filter(x=>x&&x.pass).length,0), totalCells = M.reduce((n,m)=>n+m.cells.filter(Boolean).length,0);
   const cell = x => !x ? '<td class="muted" style="text-align:center">—</td>'
-    : `<td style="text-align:center"><button class="pg-cell ${PG.sel&&PG.sel.stu===x.stu&&PG.sel.stage===x.stage?'on':''}" onclick="PG.sel={stu:'${esc(x.stu)}',stage:'${esc(x.stage)}'};render();setTimeout(()=>document.getElementById('pg-detail')?.scrollIntoView({behavior:'smooth',block:'start'}),50)">${pgDot(x.cs,'課程 '+x.taught+'/'+x.n)}${pgDot(x.qs,'問卷 '+x.qd+'/'+x.req)}${pgDot(x.gs,'成績'+(x.gf?' 未達 '+x.gf:'')+(x.gp?' 未完成 '+x.gp:''))}${x.pass?' <b style="color:#1D9E75">✔</b>':''}</button></td>`;
-  return `${progTabs('progress')}${head('Program progress','學程進度總覽','每格三點依序為：課程・問卷・成績；三項都達標才打勾。成績來自 ePortfolio 匯入（不含前測），通過標準依 ePortfolio 設定（多為 80）。')}
+    : `<td style="text-align:center"><button class="pg-cell ${PG.sel&&PG.sel.stu===x.stu&&PG.sel.stage===x.stage?'on':''}" onclick="PG.sel={stu:'${esc(x.stu)}',stage:'${esc(x.stage)}'};render();setTimeout(()=>document.getElementById('pg-detail')?.scrollIntoView({behavior:'smooth',block:'start'}),50)">${pgLab(pgDot(x.cs,'課程 '+x.taught+'/'+x.n),'課')}${pgLab(pgDot(x.qs,'問卷 '+x.qd+'/'+x.req),'問')}${pgLab(pgDot(x.gs,'成績'+(x.gf?' 未達 '+x.gf:'')+(x.gp?' 未完成 '+x.gp:'')),'績')}${x.pass?' <b style="color:#1D9E75">✔</b>':''}</button></td>`;
+  return `${progTabs('progress')}${head('Program progress','學程進度總覽','每格三點依序為：課（課程上完）・問（問卷填完）・績（成績達標）；三項都達標才打勾，滑鼠移到點上可看數字。成績來自 ePortfolio 匯入（不含前測），通過標準依 ePortfolio 設定（多為 80）。')}
     <div class="row small" style="gap:14px;margin:-6px 0 12px;color:var(--ink-2)">${[['ok','達標'],['wip','進行中／待完成'],['bad','未達通過標準'],['no','尚未開始']].map(([k,t])=>`<span>${pgDot(k,t)} ${t}</span>`).join('')}<span class="muted">｜已通過 ${totalPass} / ${totalCells} 個階段</span></div>
     <div class="card" style="padding:0"><div class="table-wrap"><table>
       <thead><tr><th style="white-space:nowrap">學員</th>${stages.map(s=>`<th style="text-align:center;min-width:84px">${esc(s)}</th>`).join('')}<th style="text-align:center">通過</th></tr></thead>
