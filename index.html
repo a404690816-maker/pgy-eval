@@ -407,6 +407,13 @@ a.pb-cell-link{color:#1F5FBF;cursor:pointer;text-decoration:underline;text-under
 .pb-oc-h{font-size:12.5px;font-weight:700;color:#3B4650;margin:8px 0 2px}
 .pb-oc-note{font-size:12.5px;color:#2F5597;background:#EEF3FB;border-radius:8px;padding:6px 10px;margin:6px 0 0}
 
+.pg-cell{border:0;background:transparent;border-radius:8px;padding:5px 8px;display:inline-flex;gap:4px;align-items:center;cursor:pointer}
+.pg-cell:hover{background:var(--paper-2)} .pg-cell.on{outline:2px solid var(--teal,#3F6E6C);background:var(--paper-2)}
+.pg-sec{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-2);background:var(--paper-2);border-radius:6px;padding:5px 10px;margin:16px 0 4px}
+.pg-row{display:grid;grid-template-columns:minmax(0,1fr) 110px 110px 90px 28px;gap:8px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--line,#EAE4DA);font-size:13.5px}
+.pg-row.pg-h{border:0;font-size:11.5px;color:var(--ink-3,#8A8F94);padding-bottom:0}
+@media(max-width:700px){.pg-row{grid-template-columns:minmax(0,1fr) 70px 70px 60px 22px;font-size:12.5px}}
+
 .login-page{max-width:1240px;margin:0 auto;padding:28px 24px 40px}
 .login-hero{display:grid;grid-template-columns:1.05fr 1fr;min-height:min(680px,calc(100vh - 130px));background:var(--card);border:1px solid var(--line);border-radius:28px;overflow:hidden;box-shadow:var(--shadow)}
 .login-copy{padding:64px 56px;display:flex;flex-direction:column;justify-content:center}
@@ -656,10 +663,11 @@ const ROLES = {
   admin:{label:'960360 侯佳儀（主任）', person:PEOPLE.admin}
 };
 const PAGES = [
-  ['home','總覽'],['forms','我的問卷'],['bank','問卷題庫'],['courses','課程管理'],['change','時間異動'],
+  ['home','總覽'],['forms','我的問卷'],['bank','問卷題庫'],['progress','學程進度'],['courses','課程清單'],['change','時間異動'],
   ['grades','評核成績'],['stats','統計分析'],['blueprint','個人藍圖'],['admin','管理後台']
 ];
-const OPEN_PAGES=['home','forms','bank','courses','change','grades','stats'];
+const OPEN_PAGES=['home','forms','bank','progress','courses','change','grades','stats'];
+const NAV_HIDDEN=['courses','grades'];   // 併入「學程進度」分頁，仍可直接連結
 const pageAllowed = (p,r) => r==='admin' || r==='qa' || OPEN_PAGES.includes(p);
 
 /* ============ 狀態（原型只存在記憶體，重新整理會還原） ============ */
@@ -716,7 +724,7 @@ function renderShell(){
   $('#role').value=r;
   $('#who').innerHTML=`<div class="avatar">${esc(nm.slice(0,1))}</div><div><b>${esc(nm)}</b><small>${esc(r==='qa'||r==='admin'?(p.role||ROLES[r].label):ROLES[r].label)}</small></div>`;
   const cur=currentPage();
-  const links=PAGES.filter(([k])=>pageAllowed(k,r)).map(([k,t])=>`<a href="#${k}" class="${cur===k?'on':''}">${t}</a>`).join('');
+  const links=PAGES.filter(([k])=>pageAllowed(k,r)&&!NAV_HIDDEN.includes(k)).map(([k,t])=>{ const on=cur===k||(k==='progress'&&NAV_HIDDEN.includes(cur)); const to=k==='progress'&&!progScope()?'courses':k; return `<a href="#${to}" class="${on?'on':''}">${t}</a>`; }).join('');
   $('#nav').innerHTML=links; $('#mnav').innerHTML=links;
 }
 function currentPage(){ const h=location.hash.replace('#',''); return PAGES.some(p=>p[0]===h) ? h : 'home'; }
@@ -724,7 +732,7 @@ function render(){
   let page=currentPage();
   if(!pageAllowed(page,STATE.role)) page='home';
   renderShell();
-  const fn={home:pHome,forms:pForms,bank:pBank,courses:pCourses,change:pChange,grades:pGrades,stats:pStats,blueprint:pBlueprint,admin:pAdmin}[page];
+  const fn={home:pHome,forms:pForms,bank:pBank,progress:pProgress,courses:()=>progTabs('courses')+pCourses(),change:pChange,grades:()=>progTabs('grades')+pGrades(),stats:pStats,blueprint:pBlueprint,admin:pAdmin}[page];
   $('#main').innerHTML=fn();
   if(fn.after) fn.after();
 }
@@ -2115,6 +2123,91 @@ function surveyStats(k){
         </tbody></table></div></div>`;
   }
   return `${seg}${svFilters(k,F)}${body}`;
+}
+
+/* ============ 學程進度（課程 × 問卷 × 成績；補足 ePortfolio 的追蹤與統計） ============ */
+const PG = { sel:null };
+function progScope(){
+  const r=STATE.role;
+  if(r==='admin'||r==='qa'||r==='head') return {all:true};
+  if(r==='student') return {list:[PB.asStudent]};
+  if(r==='mentor') return {list:PB.mentees||[]};
+  if(pbIsSup(PB.asTeacher)) return {all:true};
+  if((PB.mentees||[]).length) return {list:PB.mentees};   // 導師身分即使目前選「臨床教師」也看得到負責學員
+  return null;   // 一般臨床教師：只看得到自己授課的部分，無法判斷整個階段，不開放總覽
+}
+function progTabs(cur){
+  const t=[...(progScope()?[['progress','進度總覽']]:[]),['courses','課程清單'],['grades','評核成績']];
+  return `<div class="seg" style="margin-bottom:14px">${t.map(([k,l])=>`<button class="${cur===k?'on':''}" onclick="location.hash='${k}'">${l}</button>`).join('')}</div>`;
+}
+const PG_DOT = { ok:'#1D9E75', wip:'#EF9F27', bad:'#E24B4A', no:'#CFC8BC', na:'#CFC8BC' };
+const pgDot = (s,t) => `<i title="${t}" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${PG_DOT[s]}"></i>`;
+const pgIcon = s => s==='ok'?'<span style="color:#1D9E75">✔</span>':s==='bad'?'<span style="color:#C0392B">✘</span>':s==='wip'?'<span style="color:#B7791F">◔</span>':'<span class="muted">—</span>';
+function pgSvRows(k, stu, c){
+  return ((REAL.surveys||{})[k]||[]).filter(r=>r.stu===stu && r.course===c.name && (!r.stage || r.stage===c.stage));
+}
+function pgCourse(stu, c){
+  const taught = c.status==='已授課', hist = isHist(c);
+  const sv = ['course','t2s'].map(k=>{ const done = pgSvRows(k,stu,c).length>0;
+    return { k, st: done ? 'ok' : !taught ? 'no' : hist ? 'na' : 'wip' }; });
+  const G = (REAL.grades||[]).filter(g=>g.stu===stu && g.course===c.name && (!g.stage || g.stage===c.stage) && g.type!=='筆試前測')
+    .map(g=>{ const num = typeof g.std==='number' && typeof g.res==='number';
+      const st = g.st==='未完成' ? 'wip' : num ? (g.res>=g.std ? 'ok' : 'bad') : 'ok';
+      return {...g, pst:st}; });
+  return { c, taught, sv, G };
+}
+function pgStage(stu, stage){
+  const L = RC.filter(c=>c.student===stu && c.stage===stage && c.status!=='已取消').sort((a,b)=>(a.d||'9').localeCompare(b.d||'9'));
+  const X = L.map(c=>pgCourse(stu,c));
+  const n=X.length, taught=X.filter(x=>x.taught).length;
+  const cs = taught===n && n ? 'ok' : taught ? 'wip' : 'no';
+  const req = X.flatMap(x=>x.sv).filter(s=>s.st==='ok'||s.st==='wip'), qd = req.filter(s=>s.st==='ok').length;
+  const qs = !req.length ? 'no' : (qd===req.length && cs==='ok') ? 'ok' : 'wip';
+  const G = X.flatMap(x=>x.G), gf=G.filter(g=>g.pst==='bad').length, gp=G.filter(g=>g.pst==='wip').length;
+  const gs = gf ? 'bad' : !G.length ? (taught?'wip':'no') : gp ? 'wip' : cs==='ok' ? 'ok' : 'wip';
+  return { stu, stage, X, n, taught, req:req.length, qd, G, gf, gp, cs, qs, gs, pass: cs==='ok'&&qs==='ok'&&gs==='ok' };
+}
+function pProgress(){
+  const sc = progScope();
+  if(!sc) return progTabs('progress')+'<div class="card"><p class="muted">進度總覽開放給學員本人、導師、組長、主任與管理者。請使用「課程清單」或「評核成績」。</p></div>';
+  const studs = [...new Set(RC.filter(c=>c.student && (sc.all || sc.list.includes(c.student))).map(c=>c.student))];
+  const stages = [...new Set(RC.filter(c=>studs.includes(c.student)).map(c=>c.stage))];
+  const M = studs.map(s=>({ s, cells: stages.map(st=>RC.some(c=>c.student===s&&c.stage===st&&c.status!=='已取消') ? pgStage(s,st) : null) }));
+  if(PG.sel && !M.some(m=>m.s===PG.sel.stu && m.cells.some(x=>x&&x.stage===PG.sel.stage))) PG.sel=null;
+  if(!PG.sel && studs.length===1){ const f=M[0].cells.find(x=>x && !x.pass) || M[0].cells.find(Boolean); if(f) PG.sel={stu:f.stu,stage:f.stage}; }
+  const totalPass = M.reduce((n,m)=>n+m.cells.filter(x=>x&&x.pass).length,0), totalCells = M.reduce((n,m)=>n+m.cells.filter(Boolean).length,0);
+  const cell = x => !x ? '<td class="muted" style="text-align:center">—</td>'
+    : `<td style="text-align:center"><button class="pg-cell ${PG.sel&&PG.sel.stu===x.stu&&PG.sel.stage===x.stage?'on':''}" onclick="PG.sel={stu:'${esc(x.stu)}',stage:'${esc(x.stage)}'};render();setTimeout(()=>document.getElementById('pg-detail')?.scrollIntoView({behavior:'smooth',block:'start'}),50)">${pgDot(x.cs,'課程 '+x.taught+'/'+x.n)}${pgDot(x.qs,'問卷 '+x.qd+'/'+x.req)}${pgDot(x.gs,'成績'+(x.gf?' 未達 '+x.gf:'')+(x.gp?' 未完成 '+x.gp:''))}${x.pass?' <b style="color:#1D9E75">✔</b>':''}</button></td>`;
+  return `${progTabs('progress')}${head('Program progress','學程進度總覽','每格三點依序為：課程・問卷・成績；三項都達標才打勾。成績來自 ePortfolio 匯入（不含前測），通過標準依 ePortfolio 設定（多為 80）。')}
+    <div class="row small" style="gap:14px;margin:-6px 0 12px;color:var(--ink-2)">${[['ok','達標'],['wip','進行中／待完成'],['bad','未達通過標準'],['no','尚未開始']].map(([k,t])=>`<span>${pgDot(k,t)} ${t}</span>`).join('')}<span class="muted">｜已通過 ${totalPass} / ${totalCells} 個階段</span></div>
+    <div class="card" style="padding:0"><div class="table-wrap"><table>
+      <thead><tr><th style="white-space:nowrap">學員</th>${stages.map(s=>`<th style="text-align:center;min-width:84px">${esc(s)}</th>`).join('')}<th style="text-align:center">通過</th></tr></thead>
+      <tbody>${M.map(m=>`<tr><td style="white-space:nowrap"><b>${esc(m.s)}</b></td>${m.cells.map(cell).join('')}<td class="num" style="text-align:center">${m.cells.filter(x=>x&&x.pass).length}/${m.cells.filter(Boolean).length}</td></tr>`).join('')}</tbody>
+    </table></div></div>
+    ${PG.sel ? pgDetail(pgStage(PG.sel.stu, PG.sel.stage)) : '<p class="small muted" style="margin-top:12px">點任一格可查看該學員此階段的明細。</p>'}`;
+}
+function pgDetail(x){
+  const row = (a,b,c,d,s) => `<div class="pg-row"><span>${a}</span><span class="small">${b}</span><span class="small">${c}</span><span class="small num">${d}</span><span>${pgIcon(s)}</span></div>`;
+  const hd = (a,b,c,d) => `<div class="pg-row pg-h"><span>${a}</span><span>${b}</span><span>${c}</span><span>${d}</span><span></span></div>`;
+  const sec = (t,r='') => `<div class="pg-sec"><span>${t}</span><span>${r}</span></div>`;
+  const mentor = Object.entries(MENTOR_MAP||{}).find(([m,L])=>(L||[]).includes(x.stu));
+  const svL = { course:'學員對課程', t2s:'教師對學員' }, svT = s => s==='ok'?'已填':s==='wip'?'待填':s==='na'?'無紀錄':'未開放';
+  const miss = [x.cs!=='ok'?`課程 ${x.n-x.taught} 堂未上`:'', x.req-x.qd?`問卷缺 ${x.req-x.qd} 份`:'', x.gf?`${x.gf} 項成績未達標`:'', x.gp?`${x.gp} 項成績未完成`:''].filter(Boolean);
+  const signed = (STATE.role==='admin'||STATE.role==='qa' ? (PB.signed||[]) : (window.MY_ANNUAL||[])).find(e=>e.k==='t2s' && e.student===x.stu);
+  return `<div class="card" id="pg-detail" style="margin-top:18px">
+    <div class="spread" style="flex-wrap:wrap;gap:8px"><div><h3 style="margin:0">${esc(x.stu)}｜${esc(x.stage)}</h3>
+      <div class="xs muted">${mentor?'導師 '+esc(mentor[0])+'・':''}通過條件：課程全部上完、問卷全部填完、成績達通過標準</div></div>
+      <span class="pill ${x.pass?'sage':'coral'}">${x.pass?'✔ 已通過':'進行中'+(miss.length?'・'+miss.join('、'):'')}</span></div>
+    ${sec('A. 課程內容', `${x.taught}/${x.n}`)}${hd('課程','授課日期','授課教師','狀態')}
+    ${x.X.map(o=>row(esc(o.c.name), o.c.d?o.c.d.slice(5).replace('-','/'):'未排定', esc(o.c.teacher||'—'), o.c.status, o.taught?'ok':o.c.d?'wip':'no')).join('')}
+    ${sec('B. 學後評估（ePortfolio 匯入，不含前測）', x.G.length?`${x.G.length-x.gf-x.gp}/${x.G.length}`:'')}
+    ${x.G.length ? hd('項目','通過標準','成績','狀態')+x.G.map(g=>row(`${esc(g.course)}<span class="xs muted">・${esc(g.type)}</span>`, typeof g.std==='number'?'≥ '+g.std:'完成即可', typeof g.res==='number'?g.res:'—', g.st||'', g.pst)).join('') : '<p class="small muted" style="padding:6px 8px">尚無成績紀錄</p>'}
+    ${sec('C. 教學評量表', `${x.qd}/${x.req}`)}${hd('課程','學員對課程','教師對學員','')}
+    ${x.X.map(o=>{ const s=o.sv.every(v=>v.st==='ok'||v.st==='na')&&o.sv.some(v=>v.st==='ok')?'ok':o.sv.some(v=>v.st==='wip')?'wip':'no'; return row(esc(o.c.name), svT(o.sv[0].st), svT(o.sv[1].st), '', s); }).join('')}
+    ${sec('D. 計畫主持人審核')}
+    ${row('年度總回饋（教師對學員）', '主持人簽核', '侯佳儀', signed?'已簽核 '+esc(signed.at||''):'未簽核', signed?'ok':'no')}
+    <p class="xs muted" style="margin:12px 0 0">前測、DOPS、EPAs 等完整學習歷程請至 ePortfolio 查看；本頁用於跨學員、跨階段的進度追蹤。「無紀錄」為網站上線前的歷史課程查無問卷紀錄，不列入計算。</p>
+  </div>`;
 }
 
 /* ============ 統計分析：仿「臨床病理部PGY成效追蹤-2026」Power BI 版面 ============ */
