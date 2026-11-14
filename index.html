@@ -1586,11 +1586,14 @@ function pCourses(){
   const stages=['全部',...new Set(RCv.map(c=>c.stage))], studs=['全部',...new Set(RCv.map(c=>c.student).filter(Boolean)),...(mgr?['（未指定學員）']:[])];
   if(!stages.includes(RF.stage)) RF.stage='全部'; if(!studs.includes(RF.student)) RF.student='全部';
   const list=RCv.filter(c=>(RF.stage==='全部'||c.stage===RF.stage)&&(RF.status==='全部'||c.status===RF.status)&&(RF.student==='全部'||(RF.student==='（未指定學員）'?!c.student:c.student===RF.student)));
-  const cnt=s=>RCv.filter(c=>c.status===s).length;
-  return `${head('Courses','課程管理｜115 年度','資料來源：PGY課程_已填入課表日期.xlsx（12 份學員訓練課程時程表）。授課日期依課表；尚無課表的課程為「待排課」，不發提醒。',
+  const RCs=RCv.filter(c=>(RF.stage==='全部'||c.stage===RF.stage)&&(RF.student==='全部'||(RF.student==='（未指定學員）'?!c.student:c.student===RF.student)));   // 儀表板跟著課程階段、學員篩選
+  const cnt=s=>RCs.filter(c=>c.status===s).length;
+  const yrs=[...new Set(RCs.map(c=>(c.d||(c.planned?c.planned.slice(0,4)+'-':'')).slice(0,4)).filter(Boolean))].sort();
+  const span=yrs.length?(yrs.length>1?`${yrs[0]}–${yrs[yrs.length-1]}`:yrs[0])+' 年':'';
+  return `${head('Courses',`課程清單${span?'｜'+span:''}`,`學員訓練跨年度，依授課日期列出全部課程${RF.student!=='全部'?`（目前顯示：${esc(RF.student)}）`:''}。尚無授課日期的課程為「待排課」。`,
       mgr?`<button class="btn ghost" onclick="openRealEdit()">＋ 手動新增課程</button><button class="btn coral" onclick="openRealImport()">匯入 Excel 課表</button>`:'')}
     ${mgr?'':`<div class="pb-scope ${sc.all?'':'own'}">${sc.all?`檢視權限：${sc.why}，可查看全部課程`:`🔒 ${sc.label}`}${pbPicker()}</div>`}
-    <div class="grid g4" style="margin-bottom:18px">${[['已排定',cnt('已排定'),''],['已授課',cnt('已授課'),''],['待排課',cnt('待排課'),'alert'],['學員',new Set(RCv.map(c=>c.student).filter(Boolean)).size,'']].map(([l,v,a])=>`<button class="stat ${a}" onclick="RF.status='${['已排定','已授課','待排課'].includes(l)?l:'全部'}';render()"><span class="v num">${v}</span><span class="l">${l}</span></button>`).join('')}</div>
+    <div class="grid g4" style="margin-bottom:18px">${[['已排定',cnt('已排定'),''],['已授課',cnt('已授課'),''],['待排課',cnt('待排課'),'alert'],[RF.student!=='全部'?'課程數':'學員',RF.student!=='全部'?RCs.length:new Set(RCs.map(c=>c.student).filter(Boolean)).size,'']].map(([l,v,a])=>`<button class="stat ${a}" onclick="RF.status='${['已排定','已授課','待排課'].includes(l)?l:'全部'}';render()"><span class="v num">${v}</span><span class="l">${l}</span></button>`).join('')}</div>
     <div class="toolbar">
       ${[['stage','課程階段',stages],['student','學員',studs],['status','狀態',['全部','待排課','已排定','已授課','已取消']]].map(([k,l,o])=>`<div class="field"><label for="rf-${k}">${l}</label><select id="rf-${k}" onchange="RF.${k}=this.value;render()">${o.map(x=>`<option ${x===RF[k]?'selected':''}>${esc(x)}</option>`).join('')}</select></div>`).join('')}
       <span class="small muted" style="margin-bottom:10px">顯示 ${list.length} / ${RCv.length} 列</span>
