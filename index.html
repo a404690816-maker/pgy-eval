@@ -2152,7 +2152,8 @@ function pgCourse(stu, c){
     return { k, st: done ? 'ok' : !taught ? 'no' : hist ? 'na' : 'wip' }; });
   const G = (REAL.grades||[]).filter(g=>g.stu===stu && g.course===c.name && (!g.stage || g.stage===c.stage) && g.type!=='筆試前測')
     .map(g=>{ const num = typeof g.std==='number' && typeof g.res==='number';
-      const st = g.st==='未完成' ? 'wip' : num ? (g.res>=g.std ? 'ok' : 'bad') : 'ok';
+      const has = g.res!=='' && g.res!=null;   // 與「評核成績」判定一致：有結果就依通過標準判定，沒有結果才看狀態
+      const st = has ? (num ? (g.res>=g.std ? 'ok' : 'bad') : 'ok') : (g.st==='已完成' ? 'ok' : 'wip');
       return {...g, pst:st}; });
   return { c, taught, sv, G };
 }
