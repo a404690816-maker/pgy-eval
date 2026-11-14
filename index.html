@@ -414,6 +414,11 @@ a.pb-cell-link{color:#1F5FBF;cursor:pointer;text-decoration:underline;text-under
 .pg-row.pg-h{border:0;font-size:11.5px;color:var(--ink-3,#8A8F94);padding-bottom:0}
 @media(max-width:700px){.pg-row{grid-template-columns:minmax(0,1fr) 70px 70px 60px 22px;font-size:12.5px}}
 
+.mc-row{display:grid;grid-template-columns:92px 72px minmax(0,1fr) 110px 80px;gap:8px;align-items:center;padding:7px 10px;font-size:13.5px;border-bottom:1px solid var(--line,#EAE4DA)}
+.mc-row.mc-h{border:0;font-size:11.5px;color:var(--ink-3,#8A8F94);padding-bottom:2px;margin-top:8px}
+.mc-row.past{color:var(--ink-3,#8A8F94)} .mc-row.today{background:#E6F1FB;border-radius:8px;border-bottom-color:transparent}
+@media(max-width:700px){.mc-row{grid-template-columns:78px 56px minmax(0,1fr) 64px;font-size:12.5px}.mc-row>span:nth-child(4){display:none}.mc-row{grid-template-columns:78px 56px minmax(0,1fr) 64px}}
+
 .login-page{max-width:1240px;margin:0 auto;padding:28px 24px 40px}
 .login-hero{display:grid;grid-template-columns:1.05fr 1fr;min-height:min(680px,calc(100vh - 130px));background:var(--card);border:1px solid var(--line);border-radius:28px;overflow:hidden;box-shadow:var(--shadow)}
 .login-copy{padding:64px 56px;display:flex;flex-direction:column;justify-content:center}
@@ -1591,6 +1596,7 @@ function pCourses(){
   return `${head('Courses','課程清單',`學員訓練跨年度，依授課日期列出全部課程${RF.student!=='全部'?`（目前顯示：${esc(RF.student)}）`:''}。尚無授課日期的課程為「待排課」。`,
       mgr?`<button class="btn ghost" onclick="openRealEdit()">＋ 手動新增課程</button><button class="btn coral" onclick="openRealImport()">匯入 Excel 課表</button>`:'')}
     ${mgr?'':`<div class="pb-scope ${sc.all?'':'own'}">${sc.all?`檢視權限：${sc.why}，可查看全部課程`:`🔒 ${sc.label}`}${pbPicker()}</div>`}
+    ${pcMonth(RCs)}
     <div class="grid g4" style="margin-bottom:18px">${[['已排定',cnt('已排定'),''],['已授課',cnt('已授課'),''],['待排課',cnt('待排課'),'alert'],[RF.student!=='全部'?'課程數':'學員',RF.student!=='全部'?RCs.length:new Set(RCs.map(c=>c.student).filter(Boolean)).size,'']].map(([l,v,a])=>`<button class="stat ${a}" onclick="RF.status='${['已排定','已授課','待排課'].includes(l)?l:'全部'}';render()"><span class="v num">${v}</span><span class="l">${l}</span></button>`).join('')}</div>
     <div class="toolbar">
       ${[['stage','課程階段',stages],['student','學員',studs],['status','狀態',['全部','待排課','已排定','已授課','已取消']]].map(([k,l,o])=>`<div class="field"><label for="rf-${k}">${l}</label><select id="rf-${k}" onchange="RF.${k}=this.value;render()">${o.map(x=>`<option ${x===RF[k]?'selected':''}>${esc(x)}</option>`).join('')}</select></div>`).join('')}
@@ -1598,6 +1604,31 @@ function pCourses(){
     </div>
     ${pcGroups(list,mgr)}
     <div class="note" style="margin-top:16px">「預訂執行」是原 Excel 的階段預訂日期，「授課日期」是課表上的實際日期；課前提醒：管理者每天在「管理後台 → 明日上課清單」複製訊息貼到科部群組，清單依授課日期即時產生，改期核准後自動更新。</div>`;
+}
+/* 課程清單上方：本月應授課課程（精簡清單，跟著課程階段／學員篩選；11/15） */
+function pcMonth(L){
+  const now=new Date(TODAY), cur=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`, today=`${cur}-${String(now.getDate()).padStart(2,'0')}`;
+  if(!RF.mon) RF.mon=cur;
+  const [y,m]=RF.mon.split('-').map(Number);
+  const M=L.filter(c=>c.d && c.d.startsWith(RF.mon) && c.status!=='已取消').sort((a,b)=>a.d.localeCompare(b.d)||(a.student||'').localeCompare(b.student||'','zh-Hant'));
+  const past=M.filter(c=>c.d<today).length, tod=M.filter(c=>c.d===today).length, todo=M.length-past-tod;
+  let rows=M, more=0;
+  if(!RF.monAll && M.length>5){ const k=M.findIndex(c=>c.d>=today), st=k<0?Math.max(0,M.length-5):Math.max(0,Math.min(k-2,M.length-5)); rows=M.slice(st,st+5); more=M.length-5; }
+  const wk=d=>'日一二三四五六'[new Date(d+'T00:00:00').getDay()];
+  const tag=c=>c.d===today?'<span class="pill" style="background:#E6F1FB;color:#0C447C">今天</span>':c.d<today?'<span class="pill sage">已授課</span>':'<span class="pill">已排定</span>';
+  const go=n=>{ const d=new Date(y,m-1+n,1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; };
+  return `<div class="card" style="margin-bottom:16px;padding:14px 18px">
+    <div class="spread" style="flex-wrap:wrap;gap:8px"><div class="row" style="gap:8px;align-items:center">
+      <button class="btn sm ghost" aria-label="上個月" onclick="RF.mon='${go(-1)}';RF.monAll=false;render()">‹</button>
+      <h3 style="margin:0;font-size:16px">${y} 年 ${m} 月應授課課程</h3>
+      <button class="btn sm ghost" aria-label="下個月" onclick="RF.mon='${go(1)}';RF.monAll=false;render()">›</button>
+      ${RF.mon!==cur?`<button class="btn sm ghost" onclick="RF.mon='${cur}';RF.monAll=false;render()">回到本月</button>`:''}</div>
+      <span class="small muted">${M.length?`共 ${M.length} 堂・已上 ${past}${tod?`・今天 ${tod}`:''}・待上 ${todo}`:''}</span></div>
+    ${M.length?`<div class="mc-row mc-h"><span>日期</span><span>學員</span><span>課程／授課教師</span><span>地點</span><span>狀態</span></div>
+    ${rows.map(c=>`<div class="mc-row ${c.d<today?'past':''} ${c.d===today?'today':''}"><span class="num">${c.d.slice(5).replace('-','/')}（${wk(c.d)}）</span><span>${esc(c.student||'—')}</span><span>${esc(c.name)}<span class="muted">・${esc(c.teacher||'—')}</span></span><span class="small">${esc(c.place||'—')}</span><span>${tag(c)}</span></div>`).join('')}
+    ${more?`<div style="text-align:center;margin-top:8px"><button class="btn sm ghost" onclick="RF.monAll=true;render()">顯示本月全部 ${M.length} 堂</button></div>`:RF.monAll&&M.length>5?`<div style="text-align:center;margin-top:8px"><button class="btn sm ghost" onclick="RF.monAll=false;render()">收合</button></div>`:''}`
+    :'<p class="small muted" style="margin:10px 0 2px">這個月沒有排定授課日期的課程。</p>'}
+  </div>`;
 }
 /* 課程清單：依「學員 × 課程階段」分組，組內依授課日期排序（11/15） */
 function pcGroups(list,mgr){
