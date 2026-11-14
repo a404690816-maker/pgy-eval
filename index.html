@@ -10,9 +10,9 @@
 <style>
 :root{
   /* 依 10/27 認可的首頁設計圖：米白紙感底、珊瑚橘強調、灰藍綠輔色、細體大字 */
-  --paper:#F5F1EA; --paper-2:#EDE6DB; --card:#FFFFFF; --ink:#23282C; --ink-2:#4A5157; --muted:#7A8085;
+  --paper:#F5F1EA; --paper-2:#EDE6DB; --card:#FFFFFF; --ink:#23282C; --ink-2:#4A5157; --muted:#62686D;
   --line:#E3DCD1; --coral:#E07A5F; --coral-soft:#F7DDD3; --sage:#7FA5A3; --sage-deep:#3F6E6C; --sage-soft:#DCE9E7;
-  --good:#3E8E6A; --good-soft:#E2F1E8; --warn:#B7791F; --warn-soft:#FBEFD9; --bad:#B8505B; --bad-soft:#F8E1E3;
+  --good:#3E8E6A; --good-soft:#E2F1E8; --warn:#B7791F; --warn-soft:#FBEFD9; --bad:#B8505B; --bad-soft:#F8E1E3; --info:#245A8A; --info-soft:#E3EEF8;
   --font-display:"Outfit","Noto Sans TC",system-ui,sans-serif;
   --font-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
   --r:14px; --shadow:0 1px 2px rgba(35,40,44,.04),0 8px 24px rgba(35,40,44,.05);
@@ -138,7 +138,7 @@ tr.flag td{background:#FFFBF2}
 .stat .v{font-family:var(--font-display);font-size:34px;font-weight:300;line-height:1.1}
 .stat .l{font-size:13px;color:var(--ink-2)}
 .stat .h{font-size:12px;color:var(--muted)}
-.stat.alert .v{color:var(--coral)}
+.stat.alert .v{color:var(--warn)}
 .list-item{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
 .list-item:last-child{border-bottom:0}
 .list-item b{font-weight:600;font-size:14px}
@@ -411,16 +411,21 @@ a.pb-cell-link{color:#1F5FBF;cursor:pointer;text-decoration:underline;text-under
 .pg-cell:hover{background:var(--paper-2)} .pg-cell.on{outline:2px solid var(--teal,#3F6E6C);background:var(--paper-2)}
 .pg-sec{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-2);background:var(--paper-2);border-radius:6px;padding:5px 10px;margin:16px 0 4px}
 .pg-row{display:grid;grid-template-columns:minmax(0,1fr) 110px 110px 90px 28px;gap:8px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--line,#EAE4DA);font-size:13.5px}
-.pg-row.pg-h{border:0;font-size:11.5px;color:var(--ink-3,#8A8F94);padding-bottom:0}
+.pg-row.pg-h{border:0;font-size:11.5px;color:var(--muted);padding-bottom:0}
 @media(max-width:700px){.pg-row{grid-template-columns:minmax(0,1fr) 70px 70px 60px 22px;font-size:12.5px}}
 
 .mc-row{display:grid;grid-template-columns:92px 72px minmax(0,1fr) 110px 80px;gap:8px;align-items:center;padding:7px 10px;font-size:13.5px;border-bottom:1px solid var(--line,#EAE4DA)}
 .mc-row.mc-h{border:0;font-size:11.5px;color:var(--ink-3,#8A8F94);padding-bottom:2px;margin-top:8px}
-.mc-row.past{color:var(--ink-3,#8A8F94)} .mc-row.today{background:#E6F1FB;border-radius:8px;border-bottom-color:transparent}
+.mc-row.past{color:var(--ink-3,#8A8F94)} .mc-row.today{background:var(--info-soft);border-radius:8px;border-bottom-color:transparent}
 @media(max-width:700px){.mc-row{grid-template-columns:78px 56px minmax(0,1fr) 64px;font-size:12.5px}.mc-row>span:nth-child(4){display:none}.mc-row{grid-template-columns:78px 56px minmax(0,1fr) 64px}}
 
 .pg-d{display:inline-flex;flex-direction:column;align-items:center;gap:1px;line-height:1}
 .pg-d small{font-size:10px;color:var(--ink-3,#8A8F94)}
+
+.pill.info{background:var(--info-soft);color:var(--info)}
+.entry .no .entry-ic{width:26px;height:26px;color:var(--sage-deep);flex:none}
+.entry:hover .entry-ic{color:var(--coral)}
+.pg-sec{background:var(--sage-soft);color:var(--sage-deep);font-weight:500}
 
 .login-page{max-width:1240px;margin:0 auto;padding:28px 24px 40px}
 .login-hero{display:grid;grid-template-columns:1.05fr 1fr;min-height:min(680px,calc(100vh - 130px));background:var(--card);border:1px solid var(--line);border-radius:28px;overflow:hidden;box-shadow:var(--shadow)}
@@ -746,6 +751,11 @@ function render(){
 }
 function go(p){ if(location.hash==='#'+p) render(); else location.hash=p; window.scrollTo(0,0); }
 function setRole(r){ STATE.role=r; STATE.openTask=null; STATE.msPerson=null; try{localStorage.setItem('cp-proto-role',r);}catch(e){} render(); }
+const ENTRY_ICON = (()=>{ const w=p=>`<svg class="entry-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+  return { clip:w('<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9z"/><path d="M9 12l2 2 4-4"/>'),
+    cap:w('<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/>'),
+    cal:w('<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/><path d="M10 15h4"/>'),
+    chart:w('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>') }; })();
 function head(eyebrow,title,desc,right=''){ return `<div class="page-head"><div><div class="eyebrow">${eyebrow}</div><h1>${title}</h1>${desc?`<p>${desc}</p>`:''}</div><div class="row">${right}</div></div>`; }
 
 /* ============ 首頁 ============ */
@@ -804,7 +814,7 @@ function pHome(){
        + (mineB.length>5?`<p class="xs muted" style="margin:10px 0 0">另有 ${mineB.length-5} 份，請到「我的問卷」查看。</p>`:'')) || '<p class="small muted">本批次（11/9）沒有指派給您的問卷。</p>'
     : Object.entries(lab).map(([k,l])=>{ const by=PGS&&PGS.by&&PGS.by[k]; const L=by?{length:by.total}:all.filter(t=>t.survey===k), d=by?by.done:L.filter(t=>st(t)==='done').length; return L.length?`<div class="list-item"><div><b>${l}</b><small>${B.batch}・${L.length} 份</small></div><span class="num small">${d} / ${L.length} 已完成</span></div>`:''; }).join('');
   const monUp = upcoming.filter(c=>c.d.slice(0,7)===today.slice(0,7));   // 本月、今天起尚未授課
-  const upRow = c=>`<div class="list-item"><div><b>${esc(c.name)}</b><small>${esc(c.stage)}・${esc(c.teacher)}${c.student?'・'+esc(c.student):''}${c.place?'・'+esc(c.place):''}</small></div><span class="num small">${c.d.slice(5).replace('-','/')}（${'日一二三四五六'[new Date(c.d+'T00:00:00').getDay()]}）${c.d===today?' <b style="color:#185FA5">今天</b>':''}</span></div>`;
+  const upRow = c=>`<div class="list-item"><div><b>${esc(c.name)}</b><small>${esc(c.stage)}・${esc(c.teacher)}${c.student?'・'+esc(c.student):''}${c.place?'・'+esc(c.place):''}</small></div><span class="num small">${c.d.slice(5).replace('-','/')}（${'日一二三四五六'[new Date(c.d+'T00:00:00').getDay()]}）${c.d===today?' <b style="color:var(--info)">今天</b>':''}</span></div>`;
   const upHtml = monUp.length ? monUp.slice(0,6).map(upRow).join('') + (monUp.length>6?`<p class="small muted" style="margin:8px 0 0">還有 ${monUp.length-6} 堂，請見課程清單。</p>`:'')
     : `<p class="small muted">本月已沒有尚未授課的課程。</p>${upcoming[0]?`<p class="xs muted" style="margin:10px 0 4px">下一堂：</p>${upRow(upcoming[0])}`:''}`;
   const picker = r==='admin'||r==='qa' ? '' : pbPicker();
@@ -827,12 +837,12 @@ function pHome(){
       </svg>
       <div class="hero-org">奇美醫院・柳營<b>臨床病理部</b>Department of Clinical Pathology</div>
       <div class="hero-card">
-        <div class="spread"><div><div class="xs muted">${esc(ROLES[r].label)}</div><b style="font-size:17px">${esc(p.name)}，早安</b></div><span class="mock">115 年度實際名單、課表與成績</span></div>
+        <div class="spread"><div><div class="xs muted">${esc(ROLES[r].label)}</div><b style="font-size:17px">${esc(p.name)}，早安</b></div><span class="mock">實際名單、課表與成績</span></div>
       </div>
     </div>
   </section>
   <nav class="entries" aria-label="主要功能">
-    ${[['forms','01','我的問卷','My Evaluations'],['stats','02','教學成效分析','Teaching Analytics'],['blueprint','03','個人發展藍圖','Professional Growth'],['grades','04','評核成績與學習歷程','Learning Records']].filter(e=>pageAllowed(e[0],STATE.role)).map(e=>`<a class="entry" href="#${e[0]}"><div class="no">${e[1]}</div><b>${e[2]}</b><span>${e[3]}</span></a>`).join('')}
+    ${[['forms','01','我的問卷','My Evaluations','clip'],['progress','02','學程進度','Program Progress','cap'],['change','03','時間異動','Schedule Change','cal'],['stats','04','教學成效分析','Teaching Analytics','chart']].filter(e=>pageAllowed(e[0],STATE.role)).map(e=>`<a class="entry" href="#${e[0]==='progress'&&!progScope()?'courses':e[0]}"><div class="no">${ENTRY_ICON[e[4]]}${e[1]}</div><b>${e[2]}</b><span>${e[3]}</span></a>`).join('')}
   </nav>
   <div class="spread" style="margin:30px 0 14px;align-items:center"><h2 style="font-size:18px;margin:0">今天需要處理的事</h2>${picker}</div>
   <div class="grid g4">${stats}</div>
@@ -1019,7 +1029,7 @@ function pCoursesDemo(){
         <td><div class="xs muted">${esc(c.stage)}・${esc(c.id)}</div><b style="font-weight:500">${esc(c.name)}</b>${c.holistic?' <span class="pill coral">全人照護</span>':''}${c.manual?'<div class="xs" style="color:var(--warn)">曾手動修改，下次匯入若不同會標記衝突</div>':''}</td>
         <td>${esc(c.dept)}</td><td>${esc(c.teacher)}</td><td>${esc(c.student)}</td>
         <td class="num">${c.date?`${c.date.replaceAll('-','/')} ${c.time}<div class="xs muted">${esc(c.place)}</div>`:'<span class="muted">未排定</span>'}${pend?`<div class="xs" style="color:var(--coral)">申請改為 ${pend.newD.slice(5).replace('-','/')} ${pend.newT}（審核中）</div>`:''}</td>
-        <td>${pillStatus(c.status)}${pend?'<div style="margin-top:4px"><span class="pill coral">異動審核中</span></div>':''}</td>
+        <td>${pillStatus(c.status)}${pend?'<div style="margin-top:4px"><span class="pill warn">異動審核中</span></div>':''}</td>
         <td><div class="row" style="gap:4px">${c.sv.map(s=>`<span class="tag">${s}</span>`).join('')}</div></td>
         <td>${reminders(c)}</td>
         ${canEdit?`<td><button class="btn sm ghost" onclick="openCourseEdit('${c.id}')">編輯</button></td>`:''}
@@ -1621,7 +1631,7 @@ function pcMonth(L){
   let rows=M, more=0;
   if(!RF.monAll && M.length>5){ const k=M.findIndex(c=>c.d>=today), st=k<0?Math.max(0,M.length-5):Math.max(0,Math.min(k-2,M.length-5)); rows=M.slice(st,st+5); more=M.length-5; }
   const wk=d=>'日一二三四五六'[new Date(d+'T00:00:00').getDay()];
-  const tag=c=>c.d===today?'<span class="pill" style="background:#E6F1FB;color:#0C447C">今天</span>':c.d<today?'<span class="pill sage">已授課</span>':'<span class="pill">已排定</span>';
+  const tag=c=>c.d===today?'<span class="pill info">今天</span>':c.d<today?'<span class="pill good">已授課</span>':'<span class="pill sage">已排定</span>';
   const go=n=>{ const d=new Date(y,m-1+n,1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; };
   return `<div class="card" style="margin-bottom:16px;padding:14px 18px">
     <div class="spread" style="flex-wrap:wrap;gap:8px"><div class="row" style="gap:8px;align-items:center">
@@ -1649,7 +1659,7 @@ function pcGroups(list,mgr){
     const ds=g.L.map(c=>c.d).filter(Boolean).sort(), span=ds.length?`${ds[0].replaceAll('-','/')}${ds.length>1?' – '+ds[ds.length-1].replaceAll('-','/'):''}`:'尚未排定';
     return `<details class="card" open style="margin-bottom:14px;padding:14px 18px">
       <summary class="spread" style="cursor:pointer;gap:10px;flex-wrap:wrap"><div><h3 style="margin:0;font-size:16px">${oneStu?'':esc(g.stu)+'｜'}${esc(g.stage)}</h3><div class="xs muted">${span}</div></div>
-        <span class="row" style="gap:6px"><span class="pill sage">已授課 ${t}/${n}</span>${sch?`<span class="pill">已排定 ${sch}</span>`:''}${w?`<span class="pill coral">待排課 ${w}</span>`:''}</span></summary>
+        <span class="row" style="gap:6px"><span class="pill good">已授課 ${t}/${n}</span>${sch?`<span class="pill sage">已排定 ${sch}</span>`:''}${w?`<span class="pill warn">待排課 ${w}</span>`:''}</span></summary>
       <div class="table-wrap" style="margin-top:10px"><table>
       <thead><tr><th>課程名稱</th><th>組別</th><th>授課教師</th><th>授課日期</th><th>預訂執行</th><th>狀態</th><th>應建立的問卷</th><th>課前提醒</th><th></th></tr></thead>
       <tbody>${g.L.map(c=>`<tr class="${c.manual?'flag':''}">
@@ -2194,10 +2204,10 @@ function progTabs(cur){
   const t=[...(progScope()?[['progress','進度總覽']]:[]),['courses','課程清單'],['grades','評核成績']];
   return `<div class="seg" style="margin-bottom:14px">${t.map(([k,l])=>`<button class="${cur===k?'on':''}" onclick="location.hash='${k}'">${l}</button>`).join('')}</div>`;
 }
-const PG_DOT = { ok:'#1D9E75', wip:'#EF9F27', bad:'#E24B4A', no:'#CFC8BC', na:'#CFC8BC' };
+const PG_DOT = { ok:'#3E8E6A', wip:'#D69E2E', bad:'#B8505B', no:'#CFC8BC', na:'#CFC8BC' };
 const pgDot = (s,t) => `<i title="${t}" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${PG_DOT[s]}"></i>`;
 const pgLab = (d,l) => `<span class="pg-d">${d}<small>${l}</small></span>`;
-const pgIcon = s => s==='ok'?'<span style="color:#1D9E75">✔</span>':s==='bad'?'<span style="color:#C0392B">✘</span>':s==='wip'?'<span style="color:#B7791F">◔</span>':'<span class="muted">—</span>';
+const pgIcon = s => s==='ok'?'<span style="color:var(--good)">✔</span>':s==='bad'?'<span style="color:var(--bad)">✘</span>':s==='wip'?'<span style="color:var(--warn)">◔</span>':'<span class="muted">—</span>';
 function pgSvRows(k, stu, c){
   return ((REAL.surveys||{})[k]||[]).filter(r=>r.stu===stu && r.course===c.name && (!r.stage || r.stage===c.stage));
 }
@@ -2233,7 +2243,7 @@ function pProgress(){
   if(!PG.sel && studs.length===1){ const f=M[0].cells.find(x=>x && !x.pass) || M[0].cells.find(Boolean); if(f) PG.sel={stu:f.stu,stage:f.stage}; }
   const totalPass = M.reduce((n,m)=>n+m.cells.filter(x=>x&&x.pass).length,0), totalCells = M.reduce((n,m)=>n+m.cells.filter(Boolean).length,0);
   const cell = x => !x ? '<td class="muted" style="text-align:center">—</td>'
-    : `<td style="text-align:center"><button class="pg-cell ${PG.sel&&PG.sel.stu===x.stu&&PG.sel.stage===x.stage?'on':''}" onclick="PG.sel={stu:'${esc(x.stu)}',stage:'${esc(x.stage)}'};render();setTimeout(()=>document.getElementById('pg-detail')?.scrollIntoView({behavior:'smooth',block:'start'}),50)">${pgLab(pgDot(x.cs,'課程 '+x.taught+'/'+x.n),'課')}${pgLab(pgDot(x.qs,'問卷 '+x.qd+'/'+x.req),'問')}${pgLab(pgDot(x.gs,'成績'+(x.gf?' 未達 '+x.gf:'')+(x.gp?' 未完成 '+x.gp:'')),'績')}${x.pass?' <b style="color:#1D9E75">✔</b>':''}</button></td>`;
+    : `<td style="text-align:center"><button class="pg-cell ${PG.sel&&PG.sel.stu===x.stu&&PG.sel.stage===x.stage?'on':''}" onclick="PG.sel={stu:'${esc(x.stu)}',stage:'${esc(x.stage)}'};render();setTimeout(()=>document.getElementById('pg-detail')?.scrollIntoView({behavior:'smooth',block:'start'}),50)">${pgLab(pgDot(x.cs,'課程 '+x.taught+'/'+x.n),'課')}${pgLab(pgDot(x.qs,'問卷 '+x.qd+'/'+x.req),'問')}${pgLab(pgDot(x.gs,'成績'+(x.gf?' 未達 '+x.gf:'')+(x.gp?' 未完成 '+x.gp:'')),'績')}${x.pass?' <b style="color:var(--good)">✔</b>':''}</button></td>`;
   return `${progTabs('progress')}${head('Program progress','學程進度總覽','每格三點依序為：課（課程上完）・問（問卷填完）・績（成績達標）；三項都達標才打勾，滑鼠移到點上可看數字。成績來自 ePortfolio 匯入（不含前測），通過標準依 ePortfolio 設定（多為 80）。')}
     <div class="row small" style="gap:14px;margin:-6px 0 12px;color:var(--ink-2)">${[['ok','達標'],['wip','進行中／待完成'],['bad','未達通過標準'],['no','尚未開始']].map(([k,t])=>`<span>${pgDot(k,t)} ${t}</span>`).join('')}<span class="muted">｜已通過 ${totalPass} / ${totalCells} 個階段</span></div>
     <div class="card" style="padding:0"><div class="table-wrap"><table>
@@ -2253,7 +2263,7 @@ function pgDetail(x){
   return `<div class="card" id="pg-detail" style="margin-top:18px">
     <div class="spread" style="flex-wrap:wrap;gap:8px"><div><h3 style="margin:0">${esc(x.stu)}｜${esc(x.stage)}</h3>
       <div class="xs muted">${mentor?'導師 '+esc(mentor[0])+'・':''}通過條件：課程全部上完、問卷全部填完、成績達通過標準</div></div>
-      <span class="pill ${x.pass?'sage':'coral'}">${x.pass?'✔ 已通過':'進行中'+(miss.length?'・'+miss.join('、'):'')}</span></div>
+      <span class="pill ${x.pass?'good':'warn'}">${x.pass?'✔ 已通過':'進行中'+(miss.length?'・'+miss.join('、'):'')}</span></div>
     ${sec('A. 課程內容', `${x.taught}/${x.n}`)}${hd('課程','授課日期','授課教師','狀態')}
     ${x.X.map(o=>row(esc(o.c.name), o.c.d?o.c.d.slice(5).replace('-','/'):'未排定', esc(o.c.teacher||'—'), o.c.status, o.taught?'ok':o.c.d?'wip':'no')).join('')}
     ${sec('B. 學後評估（ePortfolio 匯入，不含前測）', x.G.length?`${x.G.length-x.gf-x.gp}/${x.G.length}`:'')}
