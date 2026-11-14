@@ -1341,7 +1341,7 @@ function barsSVG({cats,series,max,height=220,unit='',min=0}){
     const lines=c.length>7?[c.slice(0,7),c.slice(7,14)]:[c]; lines.forEach((ln,k)=>{ s+=`<text x="${padL+gw*i+gw/2}" y="${H-padB+16+k*12}" font-size="10" text-anchor="middle" fill="#4A5157">${esc(ln)}</text>`; }); });
   return s+'</svg>';
 }
-const SRC_COLORS={學員:'#E07A5F',主管:'#3F6E6C',晉階:'#B7791F',同儕:'#7FA5A3'};
+const SRC_COLORS={學員:'#8A5A83',主管:'#2F6F6B',晉階:'#C08A2E',同儕:'#4F6D9A'};
 const RADAR_LABELS=['醫檢知識','醫檢技能','專業素養','專業精進','溝通技巧','制度下的檢驗工作'];
 
 /* ============ 統計（仿現有 Power BI） ============ */
@@ -1367,7 +1367,7 @@ function statsDemoBody(v){
     <div class="grid g2" style="margin-top:18px">
       <div class="card"><div class="card-head"><h3>教師 360 度・六大核心（依評核來源）</h3><span class="mock">示意</span></div>${radar()}</div>
       <div class="stack" style="gap:18px">
-        <div class="card"><div class="card-head"><h3>前後測趨勢</h3><div class="legend"><span><i style="background:#C9DCDA"></i>前測</span><span><i style="background:#3F6E6C"></i>後測</span></div></div><div class="chart">${barsSVG({cats:['共通醫學檢驗','基礎臨床鏡檢學','基礎臨床生化學'],series:[{name:'前測',color:'#C9DCDA',vals:[Math.round(j(61,4)),Math.round(j(58,4)),null]},{name:'後測',color:'#3F6E6C',vals:[Math.round(j(83,4)),Math.round(j(79,4)),null]}],max:100,height:200})}</div><p class="xs muted" style="margin:0">基礎臨床生化學尚未進行。</p></div>
+        <div class="card"><div class="card-head"><h3>前後測趨勢</h3><div class="legend"><span><i style="background:#A9BDCF"></i>前測</span><span><i style="background:#34556F"></i>後測</span></div></div><div class="chart">${barsSVG({cats:['共通醫學檢驗','基礎臨床鏡檢學','基礎臨床生化學'],series:[{name:'前測',color:'#A9BDCF',vals:[Math.round(j(61,4)),Math.round(j(58,4)),null]},{name:'後測',color:'#34556F',vals:[Math.round(j(83,4)),Math.round(j(79,4)),null]}],max:100,height:200})}</div><p class="xs muted" style="margin:0">基礎臨床生化學尚未進行。</p></div>
         <div class="card"><div class="card-head"><h3>教學人次排行（前 5）</h3></div><div class="chart">${barsSVG({cats:TEACHERS.slice(0,5),series:[{name:'教學人次',color:'#E07A5F',vals:[16,13,11,7,7].map(x=>Math.max(1,Math.round(j(x,3))))}],max:20,height:190})}</div></div>
       </div>
     </div>
@@ -2042,10 +2042,10 @@ function pStatsSimple(){
     const rows=Object.entries(groups).map(([k,gs])=>[k.split('｜'),measures(gs)]).sort((a,b)=>a[0][1].localeCompare(b[0][1],'zh-Hant')||a[0][0].localeCompare(b[0][0],'zh-Hant'));
     body=`<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">${k.map(x=>`<div class="kpi" title="${esc(x[2])}"><span class="l">${x[0]}</span><span class="v ${x[1]==='—'?'muted':''}">${x[1]}</span><span class="h">${x[2]}</span></div>`).join('')}</div>
     <div class="grid g2" style="margin-top:18px">
-      <div class="card"><div class="card-head"><h3>前後測趨勢（依年度）</h3><div class="legend"><span><i style="background:#C9DCDA"></i>前測平均</span><span><i style="background:#3F6E6C"></i>後測平均</span></div></div>
-        ${years.length?`<div class="chart">${barsSVG({cats:years.map(rocY),series:[{name:'前測平均',color:'#C9DCDA',vals:byY.map(m=>m.pre==null?null:Math.round(m.pre*10)/10)},{name:'後測平均',color:'#3F6E6C',vals:byY.map(m=>m.post==null?null:Math.round(m.post*10)/10)}],max:100,height:210})}</div>`:'<p class="muted">沒有符合篩選的資料。</p>'}</div>
+      <div class="card"><div class="card-head"><h3>前後測趨勢（依年度）</h3><div class="legend"><span><i style="background:#A9BDCF"></i>前測平均</span><span><i style="background:#34556F"></i>後測平均</span></div></div>
+        ${years.length?`<div class="chart">${barsSVG({cats:years.map(rocY),series:[{name:'前測平均',color:'#A9BDCF',vals:byY.map(m=>m.pre==null?null:Math.round(m.pre*10)/10)},{name:'後測平均',color:'#34556F',vals:byY.map(m=>m.post==null?null:Math.round(m.post*10)/10)}],max:100,height:210})}</div>`:'<p class="muted">沒有符合篩選的資料。</p>'}</div>
       <div class="card"><div class="card-head"><h3>教學人次排行（前 5）</h3><span class="xs muted">同 Power BI：不含檢查室與永康代訓教師，並列同名次</span></div>
-        ${top.length?`<div class="chart">${barsSVG({cats:top.map(x=>x[0]),series:[{name:'教學人次',color:'#E07A5F',vals:top.map(x=>x[1])}],max:Math.max(5,Math.ceil(top[0][1]/5)*5),height:210})}</div>`:'<p class="muted">沒有符合篩選的資料。</p>'}</div>
+        ${top.length?`<div class="chart">${barsSVG({cats:top.map(x=>x[0]),series:[{name:'教學人次',color:'#2F6F6B',vals:top.map(x=>x[1])}],max:Math.max(5,Math.ceil(top[0][1]/5)*5),height:210})}</div>`:'<p class="muted">沒有符合篩選的資料。</p>'}</div>
     </div>
     <div class="card" style="margin-top:18px"><div class="card-head"><h3>總表（評核統計結果）</h3><span class="xs muted">依課程部門 × 課程階段</span></div><div class="table-wrap"><table><thead><tr><th>課程部門</th><th>課程階段</th><th class="n">課程數</th><th class="n">教學人次</th><th class="n">教師數</th><th class="n">課程學員數</th><th class="n">前測次數</th><th class="n">後測次數</th><th class="n">前測平均</th><th class="n">後測平均</th><th class="n">筆試進步率</th><th class="n">DOPS 課程數</th><th class="n">DOPS 次數</th><th class="n">DOPS 平均</th><th class="n">心得次數</th></tr></thead><tbody>
       ${rows.map(([[d,s],m])=>`<tr><td class="small" style="white-space:nowrap">${esc(d)}</td><td class="small" style="white-space:nowrap">${esc(s)}</td><td class="n num">${m.courses}</td><td class="n num">${m.teach}</td><td class="n num">${m.teachers}</td><td class="n num">${m.students}</td><td class="n num">${m.preN}</td><td class="n num">${m.postN}</td><td class="n num">${f1(m.pre)}</td><td class="n num">${f1(m.post)}</td><td class="n num">${m.gain==null?'—':Math.round(m.gain)+'%'}</td><td class="n num">${m.dopsCourses}</td><td class="n num">${m.dopsN}</td><td class="n num">${f1(m.dops)}</td><td class="n num">${m.refl}</td></tr>`).join('')}
@@ -2056,7 +2056,7 @@ function pStatsSimple(){
   if(v==='exam'){
     const cs={}; L.filter(g=>['筆試前測','筆試後測','DOPS','Mini-CEX'].includes(g.type)&&isNum(g.res)).forEach(g=>{ const c=(cs[g.course]=cs[g.course]||{stage:g.stage,v:{}}); (c.v[g.type]=c.v[g.type]||[]).push(Number(g.res)); });
     const list=Object.entries(cs).sort((a,b)=>a[1].stage.localeCompare(b[1].stage,'zh-Hant'));
-    const types=[['筆試前測','#C9DCDA'],['筆試後測','#3F6E6C'],['DOPS','#E07A5F'],['Mini-CEX','#B7791F']];
+    const types=[['筆試前測','#A9BDCF'],['筆試後測','#34556F'],['DOPS','#3F8F82'],['Mini-CEX','#C08A2E']];
     body=`<div class="grid g4">${[['筆試進步率',M.gain==null?'—':(M.gain>=0?'+':'')+Math.round(M.gain)+'%','（後測平均−前測平均）÷ 前測平均'],['DOPS 平均',f1(M.dops),`有分數 ${M.dopsScored} 份／共 ${M.dopsN} 份`],['前測平均',f1(M.pre),`n=${M.preN}`],['後測平均',f1(M.post),`n=${M.postN}`]].map(x=>`<div class="kpi"><span class="l">${x[0]}</span><span class="v">${x[1]}</span><span class="h">${x[2]}</span></div>`).join('')}</div>
       <div class="card" style="margin-top:18px"><div class="card-head"><h3>各課程考核結果（平均）</h3><div class="legend">${types.map(([t,c])=>`<span><i style="background:${c}"></i>${t}</span>`).join('')}</div></div>
       <div class="table-wrap"><table><thead><tr><th>課程階段</th><th>課程名稱</th><th style="width:46%">平均分數（0–100）</th>${types.map(([t])=>`<th class="n">${t}</th>`).join('')}</tr></thead><tbody>
@@ -2170,12 +2170,12 @@ function surveyStats(k){
   }
   if(SVF.view==='cross'){
     const ms=[...new Set(all.map(r=>r.m))].sort(); const months=[]; if(ms.length){ let [y,m]=ms[0].split('-').map(Number); const end=[ms.at(-1),SV_CUT].sort().at(-1); while(true){ const t=`${y}-${String(m).padStart(2,'0')}`; months.push(t); if(t>=end) break; m++; if(m>12){m=1;y++;} } } else months.push(SV_CUT);
-    const ser=[{name:'舊版（Forms）',color:'#3F6E6C',vals:months.map(m=>scoreAvg(old.filter(r=>r.m===m)))},{name:'115-V1',color:'#E07A5F',hollow:true,vals:months.map(m=>scoreAvg(neu.filter(r=>r.m===m)))}];
+    const ser=[{name:'舊版（Forms）',color:'#34556F',vals:months.map(m=>scoreAvg(old.filter(r=>r.m===m)))},{name:'115-V1',color:'#C08A2E',hollow:true,vals:months.map(m=>scoreAvg(neu.filter(r=>r.m===m)))}];
     const half=m=>{ const [y,mm]=m.split('-'); return `${Number(y)-1911} ${Number(mm)<=6?'上':'下'}半年`; };
     const periods=[...new Set(all.map(r=>half(r.m)+'｜'+r.v))].sort();
     const mn=Math.min(80,...ser[0].vals.filter(v=>v!=null));
     body=`<div class="note warn" style="margin-bottom:16px">跨版本只比較三件事：整體分數趨勢、品質分級分布、有對應的題目。任何一個數字都不混合兩版回覆。舊版分數接近滿分；新版題目較具體，分數可能下降，<b>不代表教學品質變差</b>。</div>
-      <div class="card"><div class="card-head"><h3>整體分數趨勢（月）</h3><div class="legend"><span><i style="background:#3F6E6C"></i>舊版（實心）</span><span><i style="background:#E07A5F"></i>115-V1（空心）</span></div></div>
+      <div class="card"><div class="card-head"><h3>整體分數趨勢（月）</h3><div class="legend"><span><i style="background:#34556F"></i>舊版（實心）</span><span><i style="background:#C08A2E"></i>115-V1（空心）</span></div></div>
         <div class="chart">${lineSVG({cats:months.map(m=>m.slice(2).replace('-','/')),series:ser,min:Math.floor(mn/5)*5,max:100,cut:SV_CUT.slice(2).replace('-','/')})}</div>
         <p class="xs muted" style="margin:6px 0 0">每點＝當月回覆的平均（每份 10 題平均 ×10）。${neu.length?'':'115-V1 尚無回覆，改版後的點會從虛線右側開始。'}</p></div>
       <div class="card" style="margin-top:18px"><div class="card-head"><h3>品質分級分布（依半年、依版本）</h3><span class="xs muted">跨年度最穩定的共同指標</span></div>
@@ -2289,8 +2289,8 @@ const OLD_FULL = {
   t2s:['您對這位學生主動學習的滿意度為','您對這位學生禮貌、禮儀的滿意度為','您對這位學生責任感的滿意度為','您對這位學生操作學習的細心滿意度為？','您對這位學生與該組其他人員互動之滿意度為','您對這位學生所交辦事務積極處理度之滿意度為','您對這位學生應變能力的滿意度為','您對這位學生對該組之基本專業知識的滿意度為','您對這位學生閱讀相關專業文章或書籍原文能力之滿意度','您對這位學生於該組出勤狀況之滿意度為'],
   course:['授課內容','講解清晰','教學準備','教學態度','時間掌握','互動能力','上課資訊','講師安排','課程主題','整體收穫']
 };
-const PBC = { pre:'#5AAFB3', post:'#3F6F8F', dops:'#5B8DEF', ref:'#E8A07A', navy:'#1F3B6E', blue:'#5B8DEF',
-  rt:{主管:'#5B8DEF',同儕:'#1F2D7A',晉階:'#E0763A',學員:'#6B2E8C'} };
+const PBC = { pre:'#A9BDCF', post:'#34556F', dops:'#3F8F82', ref:'#C08A2E', navy:'#34556F', blue:'#2F6F6B',
+  rt:{主管:'#2F6F6B',同儕:'#4F6D9A',晉階:'#C08A2E',學員:'#8A5A83'} };
 const short = (s,n=12) => s.length>n ? s.slice(0,n)+'…' : s;
 const itemLabels = k => PB.ver==='old' ? OLD_FULL[k] : SURVEYS[k].qs.map((q,i)=> k==='course'&&i===7 ? '課程與臨床／全人照護關聯' : q[0].replace(/。$/,''));
 
@@ -2326,11 +2326,11 @@ function pbColChart({cats, series, min=0, max=100, ref=80, height=300, gw=56, dr
 }
 function pbHBar(rows){ // 前後測趨勢：依年
   const W=420, rowH=34, H=30+rows.length*rowH+24, pl=44, iw=W-pl-16, min=60, max=100, x=v=>pl+(Math.max(min,v)-min)/(max-min)*iw;
-  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img"><circle cx="10" cy="10" r="4" fill="#4C8DF6"/><text x="18" y="14" font-size="11" fill="#3B4650">前測平均</text><circle cx="82" cy="10" r="4" fill="#1F2D8A"/><text x="90" y="14" font-size="11" fill="#3B4650">後測平均</text>`;
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img"><circle cx="10" cy="10" r="4" fill="#A9BDCF"/><text x="18" y="14" font-size="11" fill="#3B4650">前測平均</text><circle cx="82" cy="10" r="4" fill="#34556F"/><text x="90" y="14" font-size="11" fill="#3B4650">後測平均</text>`;
   [60,80,100].forEach(t=>s+=`<line x1="${x(t)}" x2="${x(t)}" y1="24" y2="${H-20}" stroke="#E4EAF0"/><text x="${x(t)}" y="${H-6}" font-size="11" text-anchor="middle" fill="#5C6670">${t}</text>`);
   rows.forEach(([lab,a,b],i)=>{ const y0=28+i*rowH; s+=`<text x="${pl-8}" y="${y0+17}" font-size="12" font-weight="600" text-anchor="end" fill="#3B4650">${lab}</text>`;
-    if(a!=null) s+=`<rect x="${pl}" y="${y0+2}" width="${x(a)-pl}" height="12" fill="#4C8DF6"/><text x="${pl+4}" y="${y0+12}" font-size="10" fill="#fff">${fx(a)}</text>`;
-    if(b!=null) s+=`<rect x="${pl}" y="${y0+15}" width="${x(b)-pl}" height="12" fill="#1F2D8A"/><text x="${(pl+x(b))/2}" y="${y0+25}" font-size="10" text-anchor="middle" fill="#fff">${fx(b)}</text>`; });
+    if(a!=null) s+=`<rect x="${pl}" y="${y0+2}" width="${x(a)-pl}" height="12" fill="#A9BDCF"/><text x="${pl+4}" y="${y0+12}" font-size="10" fill="#23282C">${fx(a)}</text>`;
+    if(b!=null) s+=`<rect x="${pl}" y="${y0+15}" width="${x(b)-pl}" height="12" fill="#34556F"/><text x="${(pl+x(b))/2}" y="${y0+25}" font-size="10" text-anchor="middle" fill="#fff">${fx(b)}</text>`; });
   return s+'</svg>';
 }
 function pbRadar(labels, series, {min=70,max=100,size=340,labelLen=11}={}){
@@ -2487,7 +2487,7 @@ function pbPage(){
         ${pbBig(fx(scoreAvg(L)),cardLabel)}${pbCard('', pbLegend([[legend,PBC.blue]])+pbRadar(itemLabels(k),[{name:legend,color:PBC.blue,vals:itemAvgs(L)}],{size:330}), 'pb-radar')}</div>`; };
     const LT=pbFilter(svOf('t2s'),'stageL',['stage','dept','student']), cr=coresFor('t2s',LT), n=CORE_N('t2s');
     const byStu={}; LT.forEach(r=>(byStu[r.stu]=byStu[r.stu]||[]).push(r));
-    const pal=['#5B8DEF','#1F2D7A','#E0763A','#6B2E8C','#3F9F8F','#B7791F','#C0506A'];
+    const pal=['#2F6F6B','#4F6D9A','#C08A2E','#8A5A83','#7FA5A3','#B8505B','#6B7A86'];
     const ss=Object.entries(byStu).sort((a,b)=>a[0].localeCompare(b[0],'zh-Hant')).map(([nm,x],i)=>({name:nm,color:pal[i%pal.length],vals:coresFor('t2s',x)}));
     return `<div class="pb-grid" style="grid-template-columns:1fr 1fr">${side('t2s','stageL','學習成效滿意度平均(%)','教師評學員雷達平均')}${side('course','stageR','教學成效滿意度平均(%)','課程滿意度雷達平均分數')}</div>
       <div class="pb-grid" style="grid-template-columns:3fr 2fr">
@@ -2632,7 +2632,7 @@ function pbPage2(){
   let extra='';
   if(k==='t2s'){
     const byStu={}; L.forEach(r=>(byStu[r.stu]=byStu[r.stu]||[]).push(r));
-    const pal=['#5B8DEF','#1F2D7A','#E0763A','#6B2E8C','#3F9F8F','#B7791F','#C0506A'];
+    const pal=['#2F6F6B','#4F6D9A','#C08A2E','#8A5A83','#7FA5A3','#B8505B','#6B7A86'];
     const ss=Object.entries(byStu).sort((a,b)=>a[0].localeCompare(b[0],'zh-Hant')).map(([x,y],i)=>({name:x,color:pal[i%pal.length],vals:coresFor('t2s',y)})).filter(x=>x.vals);
     const cr=coresFor('t2s',L), n=CORE_N('t2s');
     if(PB.ver!=='old') extra=pbCard(`六大核心能力（依學員）${PB.ver==='old'?'<span class="pb-tag">舊版換算</span>':''}`, `<div class="pb-merge"><div>${pbLegend(ss.map(x=>[x.name,x.color]))}${pbRadar(coreAxis(cr), ss, {size:330,labelLen:16})}</div><div>${coreMapNote('t2s')}</div></div>`, 'pb-radar');
@@ -2752,8 +2752,8 @@ function pbRelated(k,L){
     const dims=SURVEYS[k].dims||[]; const withQ=L.filter(r=>Array.isArray(r.q));
     const rows=dims.map((d,di)=>{ const c=[0,0,0]; withQ.forEach(r=>r.q.forEach(([x,y])=>{ if(x===di) c[y]++; })); const t=c[0]+c[1]+c[2];
       return `<div class="pb-dim"><div class="spread"><b>${esc(d[0])}</b><span class="xs muted">${esc(d[1])}・${t} 次勾選</span></div>
-        <div class="pb-dirbar">${DIRS.map((dir,i)=>`<span style="flex:${c[i]||0.0001};background:${['#3F8F82','#9DB9D8','#E0A35A'][i]}" title="${dir} ${c[i]}"></span>`).join('')}</div>
-        <div class="pb-legend" style="margin-top:4px">${DIRS.map((dir,i)=>`<span><i style="background:${['#3F8F82','#9DB9D8','#E0A35A'][i]}"></i>${dir} ${c[i]}</span>`).join('')}</div></div>`; }).join('');
+        <div class="pb-dirbar">${DIRS.map((dir,i)=>`<span style="flex:${c[i]||0.0001};background:${['#3E8E6A','#B8C2CC','#D69E2E'][i]}" title="${dir} ${c[i]}"></span>`).join('')}</div>
+        <div class="pb-legend" style="margin-top:4px">${DIRS.map((dir,i)=>`<span><i style="background:${['#3E8E6A','#B8C2CC','#D69E2E'][i]}"></i>${dir} ${c[i]}</span>`).join('')}</div></div>`; }).join('');
     const free=fbClean(L);
     return pbCard('相關回饋', `<p class="pb-note" style="margin:0 0 8px">依 115-V1 的五個質性面向統計各方向被勾選的次數，下方列出評核者另外補充的文字。</p>${rows}
       <div class="pb-coremap-h" style="margin-top:10px">補充文字</div><div class="pb-fb" style="max-height:260px">${free.map(r=>`<div>${is360&&PBC.rt[r.type]?`<span class="pb-rt" style="background:${PBC.rt[r.type]}1a;color:${PBC.rt[r.type]};border-color:${PBC.rt[r.type]}55">${esc(r.type)}</span>`:''}${esc(r.fb)}</div>`).join('')||`<p class="pb-empty">${L.length?'沒有補充文字':'115-V1 尚無回覆'}</p>`}</div>`);
@@ -3001,7 +3001,7 @@ function pbOutcome(G){
   const rows=Object.entries(st).map(([k,v])=>[k,avg(v.pre),avg(v.post)]).filter(x=>x[1]!=null&&x[2]!=null).sort((a,b)=>(b[2]-b[1])-(a[2]-a[1]));
   const W=420, rh=22, H=rows.length*rh+8, pl=110, iw=W-pl-46, min=40, X=v=>pl+(Math.max(min,v)-min)/(100-min)*iw;
   let sv=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img">`;
-  rows.forEach(([k,a,b],i)=>{ const y=i*rh+12; sv+=`<text x="${pl-8}" y="${y+4}" font-size="11" text-anchor="end" fill="#3B4650">${esc(short(k,8))}<title>${esc(k)}</title></text><line x1="${X(a)}" x2="${X(b)}" y1="${y}" y2="${y}" stroke="#B9C7E6" stroke-width="4" stroke-linecap="round"/><circle cx="${X(a)}" cy="${y}" r="4.5" fill="#4C8DF6"><title>前測 ${fx(a)}</title></circle><circle cx="${X(b)}" cy="${y}" r="4.5" fill="#1F2D8A"><title>後測 ${fx(b)}</title></circle><text x="${W-4}" y="${y+4}" font-size="11" font-weight="700" text-anchor="end" fill="#2F7A5F">+${fx(b-a)}</text>`; });
+  rows.forEach(([k,a,b],i)=>{ const y=i*rh+12; sv+=`<text x="${pl-8}" y="${y+4}" font-size="11" text-anchor="end" fill="#3B4650">${esc(short(k,8))}<title>${esc(k)}</title></text><line x1="${X(a)}" x2="${X(b)}" y1="${y}" y2="${y}" stroke="#B9C7E6" stroke-width="4" stroke-linecap="round"/><circle cx="${X(a)}" cy="${y}" r="4.5" fill="#A9BDCF"><title>前測 ${fx(a)}</title></circle><circle cx="${X(b)}" cy="${y}" r="4.5" fill="#34556F"><title>後測 ${fx(b)}</title></circle><text x="${W-4}" y="${y+4}" font-size="11" font-weight="700" text-anchor="end" fill="#3E8E6A">+${fx(b-a)}</text>`; });
   sv+='</svg>';
   const chip=(v,l,h)=>`<div class="pb-oc"><b>${v}</b><span>${l}</span>${h?`<em>${h}</em>`:''}</div>`;
   return `<div class="pb-ocrow">${chip(pa!=null&&pb!=null?'+'+fx(pb-pa):'—','平均進步（分）',`前 ${fx(pa)} → 後 ${fx(pb)}`)}${chip(postPass==null?'—':Math.round(postPass)+'%','後測達標率',`${post.length} 次筆試`)}${chip(dopsPass==null?'—':Math.round(dopsPass)+'%','DOPS 達標率',`${dops.length} 份`)}</div>
