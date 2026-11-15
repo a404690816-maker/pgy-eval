@@ -467,6 +467,14 @@ a.pb-cell-link{color:var(--info)} text.pb-click:hover{fill:var(--sage-deep)}
 .pb-card svg polygon[fill-opacity],.chart svg polygon[fill-opacity]{filter:drop-shadow(0 3px 4px rgba(80,50,40,.16))}
 .pb-card svg circle,.chart svg circle{filter:drop-shadow(0 1px 1.5px rgba(80,50,40,.25))}
 
+.pb-kpi-x{align-content:center}
+.pb-more-box{margin:10px auto 0;width:100%;max-width:230px;border-top:1px dashed #E8D6CF;padding-top:10px;display:grid;gap:6px;text-align:left}
+.pb-mi{display:flex;justify-content:space-between;font-size:12.5px;color:#6B5A5E}.pb-mi b{color:#2E3A44;font-weight:600;font-variant-numeric:tabular-nums}
+.pb-mbars{display:grid;gap:5px;margin-top:4px}
+.pb-mb{display:grid;grid-template-columns:30px 1fr 26px;gap:6px;align-items:center;font-size:11.5px;color:#6B5A5E}
+.pb-mb div{height:7px;background:rgba(255,255,255,.7);border-radius:4px;overflow:hidden}.pb-mb i{display:block;height:100%;border-radius:4px}
+.pb-mb b{text-align:right;font-weight:500;color:#2E3A44}
+
 .login-page{max-width:1240px;margin:0 auto;padding:28px 24px 40px}
 .login-hero{display:grid;grid-template-columns:1.05fr 1fr;min-height:min(680px,calc(100vh - 130px));background:var(--card);border:1px solid var(--line);border-radius:28px;overflow:hidden;box-shadow:var(--shadow)}
 .login-copy{padding:64px 56px;display:flex;flex-direction:column;justify-content:center}
@@ -2566,7 +2574,11 @@ function pStats(){
 const PB2_PAGES=[['overview','總覽'],['eval','評核統計'],['course','學員對課程'],['t2s','教師對學員'],['t360','教師 360'],['mentor','導師滿意度'],['ep','平台滿意度'],['summary','年度總回饋總表']];
 PB.page='overview'; PB.view={eval:'table',course:'chart',t2s:'chart',t360:'matrix'};
 const pbSeg=(key,opts)=>`<div class="seg">${opts.map(([v,t])=>`<button class="${PB.view[key]===v?'on':''}" onclick="PB.view['${key}']='${v}';render()">${t}</button>`).join('')}</div>`;
-const pbKpi2=(label,value,sub,tag)=>`<div class="pb-kpi"><div class="pb-kpi-l">${label}</div><div class="pb-kpi-v">${value==null||value===''?'—':value}</div>${tag?`<div><span class="pb-band" style="background:${BAND_C[tag]}1f;color:${BAND_C[tag]}">${tag}</span></div>`:''}${sub?`<div class="pb-kpi-s">${sub}</div>`:''}</div>`;
+const pbKpi2=(label,value,sub,tag,more)=>`<div class="pb-kpi${more?' pb-kpi-x':''}"><div class="pb-kpi-l">${label}</div><div class="pb-kpi-v">${value==null||value===''?'—':value}</div>${tag?`<div><span class="pb-band" style="background:${BAND_C[tag]}1f;color:${BAND_C[tag]}">${tag}</span></div>`:''}${sub?`<div class="pb-kpi-s">${sub}</div>`:''}${more||''}</div>`;
+/* 大分數卡下方的補充小指標（11/15：填滿空白，不改版面） */
+const pbPass = L => L.length ? Math.round(L.filter(r=>respScore(r)>=80).length/L.length*100)+'%' : '—';
+const pbMore = (items, bars) => `<div class="pb-more-box">${items.map(([l,v])=>`<div class="pb-mi"><span>${l}</span><b>${v}</b></div>`).join('')}${bars&&bars.length?`<div class="pb-mbars">${bars.map(([l,n,c,mx])=>`<div class="pb-mb"><span>${l}</span><div><i style="width:${mx?Math.round(n/mx*100):0}%;background:${c}"></i></div><b>${n}</b></div>`).join('')}</div>`:''}</div>`;
+const pbSpan = L => { const m=L.map(r=>r.m).filter(Boolean).sort(); return m.length? (m[0]===m[m.length-1]?m[0]:m[0]+' ~ '+m[m.length-1]).replaceAll('-','/') : '—'; };
 const SURV_K=['year','stage','dept','course','teacher','student'];
 function pbSurveySlicers(page,k){
   const base0=svOf(k).length?svOf(k):SVR[k];
@@ -2659,7 +2671,7 @@ function pbPage2(){
     const Lr=pbFilter(base,p,['year','stage','dept','rtype','student']);   // 前 5 名不受「受評教師」影響
     const qs=itemLabels('t360');
     const itemTbl=`<table class="pb-table pb-itemtbl"><thead><tr><th>#</th><th>題目</th>${ax.map(t=>`<th class="n"><span class="pb-dot" style="background:${PBC.rt[t]}"></span>${t}</th>`).join('')}<th class="n">平均</th></tr></thead><tbody>${qs.map((q,i)=>`<tr><td class="num muted">${i+1}</td><td>${esc(q)}</td>${ax.map(t=>{ const x=L.filter(r=>r.type===t); return `<td class="n">${x.length?fx(itemAvg(x,i)):''}</td>`; }).join('')}<td class="n"><b>${fx(allIa&&allIa[i])}</b></td></tr>`).join('')}</tbody></table>`;
-    return sl+`<div class="pb-grid" style="grid-template-columns:1fr 1.5fr 2fr;align-items:stretch">${pbKpi2('教師 360 評核（四類平均）',fx(s4),`${L.length} 份回覆`,s4==null?'':band(s4))}
+    return sl+`<div class="pb-grid" style="grid-template-columns:1fr 1.5fr 2fr;align-items:stretch">${pbKpi2('教師 360 評核（四類平均）',fx(s4),`${L.length} 份回覆`,s4==null?'':band(s4),pbMore([['受評教師',new Set(L.map(r=>r.teacher).filter(Boolean)).size+' 位'],['合格率（≥80）',pbPass(L)]],tv.map(x=>[x.t,x.n,PBC.rt[x.t],Math.max(...tv.map(y=>y.n),1)])))}
         ${pbCard('四類評核者比較', `<div class="pb-type">${typeRadar}${typeList}</div>`, 'pb-radar')}
         ${sc360.all?pbCard('教師 360 前 5 名（四類平均）', pbTeacherRank(Lr)):(sc360.mentor?pbCard('學員相關教師', `<p class="small" style="margin:0 0 6px">${esc(PB.mentees.join('、'))} 的課程教師 ${new Set(L.map(r=>r.teacher)).size} 位・${L.length} 份回覆</p><table class="pb-table"><tbody>${Object.entries(L.reduce((a,r)=>{(a[r.teacher]=a[r.teacher]||[]).push(r);return a},{})).sort((a,b)=>a[0].localeCompare(b[0],'zh-Hant')).map(([t,x])=>`<tr><td style="white-space:nowrap">${esc(t)}</td><td class="small muted">${esc([...new Set(x.map(r=>r.stage))].join('、'))}</td><td class="n"><b>${fx(four(x))}</b></td></tr>`).join('')}</tbody></table><p class="pb-note">依姓名排列、不排名；可用上方「受評教師」篩選查看個別教師。</p>`):pbCard('我的 360 結果', `<p class="small" style="margin:0 0 6px">${esc(sc360.me)}・${L.length} 份回覆</p><p class="pb-note">依權限，一般教師只能查看自己的評核結果，不顯示其他教師與排名。</p>`))}</div>
       ${pbCard('各題（依評核類型）', `${pbLegend(ser.map(s=>[s.name,s.color]))}<div style="max-width:520px;margin:0 auto">${pbRadar(qs.map((_,i)=>String(i+1)), ser, {size:330})}</div><ol class="pb-qlist pb-qavg">${qs.map((q,i)=>`<li>${esc(q)}　<b>${fx(allIa&&allIa[i])}</b></li>`).join('')}</ol>`, 'pb-radar')}
@@ -2668,7 +2680,7 @@ function pbPage2(){
   const sc=scoreAvg(L), ia=itemAvgs(L);
   const g={}; L.forEach(r=>(g[r.course]=g[r.course]||[]).push(r));
   const arr=Object.entries(g).map(([c,x])=>[c,scoreAvg(x)]).sort((a,b)=>b[1]-a[1]);
-  const kp=`<div class="pb-grid" style="grid-template-columns:1fr 2fr">${pbKpi2(k==='course'?'教學成效滿意度（學員對課程）':'學習成效滿意度（教師對學員）',fx(sc),`${L.length} 份回覆・${arr.length} 門課`,sc==null?'':band(sc))}${pbCard('各題平均', pbRadar(itemLabels(k),[{name:'平均',color:PBC.blue,vals:ia}],{size:300}), 'pb-radar')}</div>`;
+  const kp=`<div class="pb-grid" style="grid-template-columns:1fr 2fr">${pbKpi2(k==='course'?'教學成效滿意度（學員對課程）':'學習成效滿意度（教師對學員）',fx(sc),`${L.length} 份回覆・${arr.length} 門課`,sc==null?'':band(sc),pbMore([['授課教師',new Set(L.map(r=>r.teacher).filter(Boolean)).size+' 位'],['學員',new Set(L.map(r=>r.stu).filter(Boolean)).size+' 位'],['合格率（≥80）',pbPass(L)],['填答期間',pbSpan(L)]]))}${pbCard('各題平均', pbRadar(itemLabels(k),[{name:'平均',color:PBC.blue,vals:ia}],{size:300}), 'pb-radar')}</div>`;
   let extra='';
   if(k==='t2s'){
     const byStu={}; L.forEach(r=>(byStu[r.stu]=byStu[r.stu]||[]).push(r));
@@ -3005,7 +3017,7 @@ function pbNewOnly(k){
   const sc0=scoreAvg(L), ia=itemAvgs(L);
   const banner=`<div class="pb-scope ${sc.all||sc.summary?'':'own'}">${sc.all?`檢視權限：${sc.why}，可查看全部`:sc.summary?'平台滿意度不涉及個人，所有人只看整體彙總':`🔒 ${sc.label}`}${pbPicker()}</div>`;
   const bar=pbBar('x', all, k==='mentor'&&(sc.all)?[['year','年度',y=>rocY(y)],['student','學員']]:[['year','年度',y=>rocY(y)]], 2);
-  const kp=`<div class="pb-grid" style="grid-template-columns:1fr 2fr">${pbKpi2(S.name.replace('PGY ',''),fx(sc0),`${L.length} 份回覆`,sc0==null?'':band(sc0))}${pbCard('各題平均', L.length?pbRadar(S.qs.map((_,i)=>String(i+1)),[{name:'平均',color:PBC.blue,vals:ia}],{size:300}):'')}</div>`;
+  const kp=`<div class="pb-grid" style="grid-template-columns:1fr 2fr">${pbKpi2(S.name.replace('PGY ',''),fx(sc0),`${L.length} 份回覆`,sc0==null?'':band(sc0),pbMore([['合格率（≥80）',pbPass(L)],['填答期間',pbSpan(L)]]))}${pbCard('各題平均', L.length?pbRadar(S.qs.map((_,i)=>String(i+1)),[{name:'平均',color:PBC.blue,vals:ia}],{size:300}):'')}</div>`;
   const qlist=pbCard('題目', `<ol class="pb-qlist pb-qavg">${S.qs.map((q,i)=>`<li>${esc(q[0])}${q[1]?` <span class="xs muted">（${esc(String(q[1]))}）</span>`:''}${L.length?`　<b>${fx(ia&&ia[i])}</b>`:''}</li>`).join('')}</ol>`);
   const empty=!all.length?`<div class="pb-card"><p class="pb-empty">${esc(S.name)}為 115-V1 新問卷，從 115/11 起收回覆；收到後這裡會依權限自動顯示統計${k==='mentor'?'、相關回饋與年度總回饋（主持人簽核後列入總表）':'與改善建議'}。</p></div>`:'';
   const fb = k==='mentor' ? pbFeedbackBlock('mentor',L) : pbCard('改善建議', `<div class="pb-fb">${fbClean(L).map(r=>`<div>${esc(r.fb)}</div>`).join('')||'<p class="pb-empty">尚無建議</p>'}</div>`);
