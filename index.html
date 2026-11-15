@@ -475,6 +475,28 @@ a.pb-cell-link{color:var(--info)} text.pb-click:hover{fill:var(--sage-deep)}
 .pb-mb div{height:7px;background:rgba(255,255,255,.7);border-radius:4px;overflow:hidden}.pb-mb i{display:block;height:100%;border-radius:4px}
 .pb-mb b{text-align:right;font-weight:500;color:#2E3A44}
 
+/* 首頁封面動態（11/15）：進場淡入、背景圖形緩慢漂浮、圓圈描線；系統設定減少動態時自動關閉 */
+@keyframes hvUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes hvDraw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes hvSway{0%,100%{transform:translate(0,0)}50%{transform:translate(-10px,8px)}}
+@keyframes hvWave{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(8px,-6px) scale(1.015)}}
+@keyframes hvPeach{0%,100%{transform:translate(0,0)}50%{transform:translate(6px,-4px)}}
+@keyframes hvOrbit{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes hvFloat{0%,100%{transform:translateY(0);opacity:.35}50%{transform:translateY(-14px);opacity:.8}}
+.hero-copy>*{opacity:0;animation:hvUp .8s cubic-bezier(.2,.7,.2,1) forwards}
+.hero-copy>*:nth-child(1){animation-delay:.05s}.hero-copy>*:nth-child(2){animation-delay:.18s}.hero-copy>*:nth-child(3){animation-delay:.34s}.hero-copy>*:nth-child(4){animation-delay:.48s}
+.hero-card,.hero-org{opacity:0;animation:hvUp .8s .55s cubic-bezier(.2,.7,.2,1) forwards}
+.hero-org{animation-delay:.3s}
+.hero h1 em{display:inline-block;animation:hvFloat 3.2s ease-in-out 1.2s infinite}
+.hv{transform-box:fill-box;transform-origin:center}
+.hv-s{animation:hvSway 11s ease-in-out infinite}
+.hv-c{animation:hvWave 9s ease-in-out infinite}
+.hv-p{animation:hvPeach 7s ease-in-out infinite}
+.hv-o{stroke-dasharray:1;stroke-dashoffset:1;animation:hvDraw 2.2s .4s ease-out forwards}
+.hv-dot{transform-box:view-box;transform-origin:200px 90px;animation:hvOrbit 18s linear infinite}
+.hv-f{transform-box:fill-box;animation:hvFloat 5s ease-in-out infinite}.hv-f2{animation-delay:1.6s;animation-duration:6.5s}.hv-f3{animation-delay:3s;animation-duration:7.5s}
+@media (prefers-reduced-motion:reduce){.hero-copy>*,.hero-card,.hero-org{opacity:1;animation:none}.hv,.hv-o,.hv-dot,.hv-f,.hero h1 em{animation:none}.hv-o{stroke-dashoffset:0}}
+
 .login-page{max-width:1240px;margin:0 auto;padding:28px 24px 40px}
 .login-hero{display:grid;grid-template-columns:1.05fr 1fr;min-height:min(680px,calc(100vh - 130px));background:var(--card);border:1px solid var(--line);border-radius:28px;overflow:hidden;box-shadow:var(--shadow)}
 .login-copy{padding:64px 56px;display:flex;flex-direction:column;justify-content:center}
@@ -879,14 +901,14 @@ function pHome(){
       <svg viewBox="0 0 600 340" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
         <defs><linearGradient id="gc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F0A68E"/><stop offset="1" stop-color="#E07A5F"/></linearGradient>
         <linearGradient id="gs" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#C9DCDA"/><stop offset="1" stop-color="#8FB2B0"/></linearGradient></defs>
-        <path d="M600 0 L600 210 C520 160 470 70 380 40 C330 22 300 8 290 0 Z" fill="url(#gs)" opacity=".85"/>
-        <path d="M40 340 C90 230 180 150 300 150 C420 150 520 230 600 300 L600 340 Z" fill="url(#gc)" opacity=".9"/>
-        <path d="M0 340 C40 300 70 240 150 230 C240 220 260 300 330 340 Z" fill="#F7DDD3"/>
-        <circle cx="200" cy="90" r="46" fill="none" stroke="#E07A5F" stroke-width="1" opacity=".5"/>
+        <path class="hv hv-s" d="M600 0 L600 210 C520 160 470 70 380 40 C330 22 300 8 290 0 Z" fill="url(#gs)" opacity=".85"/>
+        <path class="hv hv-c" d="M40 340 C90 230 180 150 300 150 C420 150 520 230 600 300 L600 340 Z" fill="url(#gc)" opacity=".9"/>
+        <path class="hv hv-p" d="M0 340 C40 300 70 240 150 230 C240 220 260 300 330 340 Z" fill="#F7DDD3"/>
+        <circle class="hv-o" cx="200" cy="90" r="46" fill="none" stroke="#E07A5F" stroke-width="1" opacity=".5" pathLength="1"/><circle class="hv-dot" cx="200" cy="44" r="3.2" fill="#E07A5F" opacity=".7"/><circle class="hv-f hv-f1" cx="470" cy="110" r="4" fill="#fff" opacity=".7"/><circle class="hv-f hv-f2" cx="120" cy="200" r="3" fill="#E07A5F" opacity=".35"/><circle class="hv-f hv-f3" cx="540" cy="250" r="5" fill="#fff" opacity=".55"/>
       </svg>
       <div class="hero-org">奇美醫院・柳營<b>臨床病理部</b>Department of Clinical Pathology</div>
       <div class="hero-card">
-        <div class="spread"><div><div class="xs muted">${esc(ROLES[r].label)}</div><b style="font-size:17px">${esc(p.name)}，早安</b></div><span class="mock">實際名單、課表與成績</span></div>
+        <div class="spread"><div><div class="xs muted">${esc(ROLES[r].label)}</div><b style="font-size:17px">${esc(p.name)}，${(h=>h<5?'晚安':h<11?'早安':h<18?'午安':'晚安')(new Date().getHours())}</b></div><span class="mock">實際名單、課表與成績</span></div>
       </div>
     </div>
   </section>
