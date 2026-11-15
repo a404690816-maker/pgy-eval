@@ -515,6 +515,14 @@ a.pb-cell-link{color:var(--info)} text.pb-click:hover{fill:var(--sage-deep)}
 .login-card input{border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:16px;background:#fff;color:var(--ink);font-family:inherit}
 .login-card input:focus{border-color:var(--coral);outline:none;box-shadow:0 0 0 3px var(--coral-soft)}
 .login-card .btn{justify-content:center;padding:11px 18px;font-size:15px;margin-top:4px}
+/* 登入頁動態（11/15）：與首頁封面相同的進場與漂浮效果 */
+.login-copy>*{opacity:0;animation:hvUp .8s cubic-bezier(.2,.7,.2,1) forwards}
+.login-copy>*:nth-child(1){animation-delay:.05s}.login-copy>*:nth-child(2){animation-delay:.18s}.login-copy>*:nth-child(3){animation-delay:.34s}.login-copy>*:nth-child(4){animation-delay:.48s}.login-copy>*:nth-child(5){animation-delay:.62s}
+.login-copy h1{white-space:nowrap}
+.login-copy h1 em{display:inline-block;animation:hvFloat 3.2s ease-in-out 1.2s infinite}
+.login-card{opacity:0;animation:hvUp .9s .45s cubic-bezier(.2,.7,.2,1) forwards}
+.lg-dot{transform-box:view-box;transform-origin:170px 150px;animation:hvOrbit 18s linear infinite}
+@media (prefers-reduced-motion:reduce){.login-copy>*,.login-card{opacity:1;animation:none}.lg-dot,.login-copy h1 em{animation:none}}
 .login-msg{min-height:20px;color:#B4442A;font-size:13px}
 .login-help{line-height:1.7;margin-top:4px!important}
 @media (max-width:900px){.login-hero{grid-template-columns:1fr}.login-copy{padding:40px 28px}.login-art{min-height:520px}}
@@ -3305,10 +3313,10 @@ window.__CFG = { url: 'https://ahsaodrjvojonmvdldfv.supabase.co', key: 'sb_publi
           <svg viewBox="0 0 600 520" preserveAspectRatio="xMidYMid slice">
             <defs><linearGradient id="lgc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F0A68E"/><stop offset="1" stop-color="#E07A5F"/></linearGradient>
             <linearGradient id="lgs" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#C9DCDA"/><stop offset="1" stop-color="#8FB2B0"/></linearGradient></defs>
-            <path d="M600 0 L600 300 C520 230 470 110 380 60 C330 32 300 12 290 0 Z" fill="url(#lgs)" opacity=".85"/>
-            <path d="M0 520 C60 380 170 300 310 300 C450 300 540 380 600 450 L600 520 Z" fill="url(#lgc)" opacity=".9"/>
-            <path d="M0 520 C40 470 80 410 170 400 C260 392 290 470 350 520 Z" fill="#F7DDD3"/>
-            <circle cx="170" cy="150" r="60" fill="none" stroke="#E07A5F" stroke-width="1" opacity=".5"/>
+            <path class="hv hv-s" d="M600 0 L600 300 C520 230 470 110 380 60 C330 32 300 12 290 0 Z" fill="url(#lgs)" opacity=".85"/>
+            <path class="hv hv-c" d="M0 520 C60 380 170 300 310 300 C450 300 540 380 600 450 L600 520 Z" fill="url(#lgc)" opacity=".9"/>
+            <path class="hv hv-p" d="M0 520 C40 470 80 410 170 400 C260 392 290 470 350 520 Z" fill="#F7DDD3"/>
+            <circle class="hv-o" cx="170" cy="150" r="60" fill="none" stroke="#E07A5F" stroke-width="1" opacity=".5" pathLength="1"/><circle class="lg-dot" cx="170" cy="90" r="3.6" fill="#E07A5F" opacity=".7"/><circle class="hv-f hv-f1" cx="470" cy="150" r="4.5" fill="#fff" opacity=".7"/><circle class="hv-f hv-f2" cx="90" cy="300" r="3" fill="#E07A5F" opacity=".35"/><circle class="hv-f hv-f3" cx="540" cy="400" r="5" fill="#fff" opacity=".55"/>
           </svg>
           <form class="login-card" onsubmit="event.preventDefault();window.__login()">
             <h2>登入教學評核平台</h2>
