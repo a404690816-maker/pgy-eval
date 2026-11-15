@@ -496,6 +496,18 @@ a.pb-cell-link{color:var(--info)} text.pb-click:hover{fill:var(--sage-deep)}
 .hv-dot{transform-box:view-box;transform-origin:200px 90px;animation:hvOrbit 18s linear infinite}
 .hv-f{transform-box:fill-box;animation:hvFloat 5s ease-in-out infinite}.hv-f2{animation-delay:1.6s;animation-duration:6.5s}.hv-f3{animation-delay:3s;animation-duration:7.5s}
 @media (prefers-reduced-motion:reduce){.hero-copy>*,.hero-card,.hero-org{opacity:1;animation:none}.hv,.hv-o,.hv-dot,.hv-f,.hero h1 em{animation:none}.hv-o{stroke-dashoffset:0}}
+/* 手機：統計分析表格不跑版 */
+.pb-x{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+.pb-tag{white-space:nowrap}
+.pb-x .pb-table td:first-child{white-space:nowrap}
+@media (max-width:560px){
+  .pb-card{padding:10px 10px}
+  .pb-table{font-size:12.5px}
+  .pb-table th,.pb-table td{padding:5px 4px}
+  .pb-x .pb-table th{white-space:normal;word-break:keep-all;line-height:1.3;vertical-align:bottom}
+  .pb-x .pb-table th.n{min-width:2.6em}
+  .pb-x .pb-table td:first-child .pb-tag{display:block;width:max-content;margin:2px 0 0;font-size:10.5px}
+}
 
 .login-page{max-width:1240px;margin:0 auto;padding:28px 24px 40px}
 .login-hero{display:grid;grid-template-columns:1.05fr 1fr;min-height:min(680px,calc(100vh - 130px));background:var(--card);border:1px solid var(--line);border-radius:28px;overflow:hidden;box-shadow:var(--shadow)}
@@ -2425,7 +2437,7 @@ const pbCard = (title, body, cls='') => `<div class="pb-card ${cls}">${title?`<d
 const pbKpi = (label, value) => `<div class="pb-kpi"><div class="pb-kpi-l">${label}</div><div class="pb-kpi-v">${value==null||value===''?'—':value}</div></div>`;
 const pbBig = (value, label) => `<div class="pb-big"><div class="v">${value==null||value===''?'—':value}</div><div class="l">${label}</div></div>`;
 function pbTable(head, rows, total){
-  return `<table class="pb-table"><thead><tr>${head.map((h,i)=>`<th class="${i?'n':''}">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td class="${i?'n':''}">${c}</td>`).join('')}</tr>`).join('')}${total?`<tr class="tot">${total.map((c,i)=>`<td class="${i?'n':''}">${c}</td>`).join('')}</tr>`:''}</tbody></table>`;
+  return `<div class="pb-x"><table class="pb-table"><thead><tr>${head.map((h,i)=>`<th class="${i?'n':''}">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td class="${i?'n':''}">${c}</td>`).join('')}</tr>`).join('')}${total?`<tr class="tot">${total.map((c,i)=>`<td class="${i?'n':''}">${c}</td>`).join('')}</tr>`:''}</tbody></table></div>`;
 }
 function pbToggle(k){ PB.open[k]=!PB.open[k]; const y=window.scrollY; render(); window.scrollTo(0,y); }
 // 矩陣：rows 依 levels 分組（第一層預設展開），columns 為 colKey 的值，cell=valueFn(rows)
@@ -2646,7 +2658,7 @@ function pbPage2(){
       </div>
       <div class="pb-grid" style="grid-template-columns:1fr 1.4fr">
         ${pbCard('學習成效（前後測）', hb.length?pbHBar(hb)+pbOutcome(G):'<p class="pb-empty">沒有筆試資料</p>')}
-        ${pbCard('依學員', pbTable(['學員姓名','教學成效','學習成效','DOPS 平均','評核完成'], rows, ['總計',fx(sc),fx(st),fx(M.dops),'']) + '<p class="pb-note" style="margin-top:6px">點數字可直接進到該頁並篩選這位學員；點「評核完成」會開啟「評核成績」頁的明細。</p>')}
+        ${pbCard('依學員', pbTable(['學員姓名','教學<wbr>成效','學習<wbr>成效','DOPS 平均','評核<wbr>完成'], rows, ['總計',fx(sc),fx(st),fx(M.dops),'']) + '<p class="pb-note" style="margin-top:6px">點數字可直接進到該頁並篩選這位學員；點「評核完成」會開啟「評核成績」頁的明細。</p>')}
       </div>`;
   }
   if(p==='eval'){
