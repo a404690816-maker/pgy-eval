@@ -2680,7 +2680,7 @@ function pbPage2(){
   const sc=scoreAvg(L), ia=itemAvgs(L);
   const g={}; L.forEach(r=>(g[r.course]=g[r.course]||[]).push(r));
   const arr=Object.entries(g).map(([c,x])=>[c,scoreAvg(x)]).sort((a,b)=>b[1]-a[1]);
-  const kp=`<div class="pb-grid" style="grid-template-columns:1fr 2fr">${pbKpi2(k==='course'?'教學成效滿意度（學員對課程）':'學習成效滿意度（教師對學員）',fx(sc),`${L.length} 份回覆・${arr.length} 門課`,sc==null?'':band(sc),pbMore([['授課教師',new Set(L.map(r=>r.teacher).filter(Boolean)).size+' 位'],['學員',new Set(L.map(r=>r.stu).filter(Boolean)).size+' 位'],['合格率（≥80）',pbPass(L)],['填答期間',pbSpan(L)]]))}${pbCard('各題平均', pbRadar(itemLabels(k),[{name:'平均',color:PBC.blue,vals:ia}],{size:300}), 'pb-radar')}</div>`;
+  const kp=`<div class="pb-grid" style="grid-template-columns:1fr 2fr">${pbKpi2(k==='course'?'教學成效滿意度（學員對課程）':'學習成效滿意度（教師對學員）',fx(sc),`${L.length} 份回覆・${arr.length} 門課`,sc==null?'':band(sc),pbMore([['授課教師',new Set(L.map(r=>r.teacher).filter(Boolean)).size+' 位'],['學員',new Set(L.map(r=>r.stu).filter(Boolean)).size+' 位'],['合格率（≥80）',pbPass(L)]]))}${pbCard('各題平均', pbRadar(itemLabels(k),[{name:'平均',color:PBC.blue,vals:ia}],{size:300}), 'pb-radar')}</div>`;
   let extra='';
   if(k==='t2s'){
     const byStu={}; L.forEach(r=>(byStu[r.stu]=byStu[r.stu]||[]).push(r));
@@ -3017,7 +3017,7 @@ function pbNewOnly(k){
   const sc0=scoreAvg(L), ia=itemAvgs(L);
   const banner=`<div class="pb-scope ${sc.all||sc.summary?'':'own'}">${sc.all?`檢視權限：${sc.why}，可查看全部`:sc.summary?'平台滿意度不涉及個人，所有人只看整體彙總':`🔒 ${sc.label}`}${pbPicker()}</div>`;
   const bar=pbBar('x', all, k==='mentor'&&(sc.all)?[['year','年度',y=>rocY(y)],['student','學員']]:[['year','年度',y=>rocY(y)]], 2);
-  const kp=`<div class="pb-grid" style="grid-template-columns:1fr 2fr">${pbKpi2(S.name.replace('PGY ',''),fx(sc0),`${L.length} 份回覆`,sc0==null?'':band(sc0),pbMore([['合格率（≥80）',pbPass(L)],['填答期間',pbSpan(L)]]))}${pbCard('各題平均', L.length?pbRadar(S.qs.map((_,i)=>String(i+1)),[{name:'平均',color:PBC.blue,vals:ia}],{size:300}):'')}</div>`;
+  const kp=`<div class="pb-grid" style="grid-template-columns:1fr 2fr">${pbKpi2(S.name.replace('PGY ',''),fx(sc0),`${L.length} 份回覆`,sc0==null?'':band(sc0),pbMore([['合格率（≥80）',pbPass(L)]]))}${pbCard('各題平均', L.length?pbRadar(S.qs.map((_,i)=>String(i+1)),[{name:'平均',color:PBC.blue,vals:ia}],{size:300}):'')}</div>`;
   const qlist=pbCard('題目', `<ol class="pb-qlist pb-qavg">${S.qs.map((q,i)=>`<li>${esc(q[0])}${q[1]?` <span class="xs muted">（${esc(String(q[1]))}）</span>`:''}${L.length?`　<b>${fx(ia&&ia[i])}</b>`:''}</li>`).join('')}</ol>`);
   const empty=!all.length?`<div class="pb-card"><p class="pb-empty">${esc(S.name)}為 115-V1 新問卷，從 115/11 起收回覆；收到後這裡會依權限自動顯示統計${k==='mentor'?'、相關回饋與年度總回饋（主持人簽核後列入總表）':'與改善建議'}。</p></div>`:'';
   const fb = k==='mentor' ? pbFeedbackBlock('mentor',L) : pbCard('改善建議', `<div class="pb-fb">${fbClean(L).map(r=>`<div>${esc(r.fb)}</div>`).join('')||'<p class="pb-empty">尚無建議</p>'}</div>`);
