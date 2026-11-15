@@ -861,7 +861,8 @@ function pHome(){
     ? (mineB.sort((x,y)=>(st(x)==='done')-(st(y)==='done')).slice(0,5).map(t=>`<div class="list-item"><div><b>${esc(lab[t.survey])}｜${esc(t.target)}</b><small>${esc(t.period)}・截止 ${t.due.replaceAll('-','/')}</small></div>${st(t)==='done'?'<span class="pill good">已完成</span>':`<button class="btn sm" onclick="openBatchTask('${esc(me)}','${t.id}')">填寫</button>`}</div>`).join('')
        + (mineB.length>5?`<p class="xs muted" style="margin:10px 0 0">另有 ${mineB.length-5} 份，請到「我的問卷」查看。</p>`:'')) || '<p class="small muted">本批次（11/9）沒有指派給您的問卷。</p>'
     : Object.entries(lab).map(([k,l])=>{ const by=PGS&&PGS.by&&PGS.by[k]; const L=by?{length:by.total}:all.filter(t=>t.survey===k), d=by?by.done:L.filter(t=>st(t)==='done').length; return L.length?`<div class="list-item"><div><b>${l}</b><small>${B.batch}・${L.length} 份</small></div><span class="num small">${d} / ${L.length} 已完成</span></div>`:''; }).join('');
-  const monUp = upcoming.filter(c=>c.d.slice(0,7)===today.slice(0,7));   // 本月、今天起尚未授課
+  const monUp = window.MONTH_ALL ? window.MONTH_ALL.map(c=>({...c, d:`${c.date.slice(0,4)}-${c.date.slice(4,6)}-${c.date.slice(6,8)}`}))   // 所有人都看全部（資料庫提供）
+    : upcoming.filter(c=>c.d.slice(0,7)===today.slice(0,7));   // 本月、今天起尚未授課
   const upRow = c=>`<div class="list-item"><div><b>${esc(c.name)}</b><small>${esc(c.stage)}・${esc(c.teacher)}${c.student?'・'+esc(c.student):''}${c.place?'・'+esc(c.place):''}</small></div><span class="num small">${c.d.slice(5).replace('-','/')}（${'日一二三四五六'[new Date(c.d+'T00:00:00').getDay()]}）${c.d===today?' <b style="color:var(--info)">今天</b>':''}</span></div>`;
   const upHtml = monUp.length ? monUp.slice(0,6).map(upRow).join('') + (monUp.length>6?`<p class="small muted" style="margin:8px 0 0">還有 ${monUp.length-6} 堂，請見課程清單。</p>`:'')
     : `<p class="small muted">本月已沒有尚未授課的課程。</p>${upcoming[0]?`<p class="xs muted" style="margin:10px 0 4px">下一堂：</p>${upRow(upcoming[0])}`:''}`;
@@ -3137,6 +3138,9 @@ window.doReject = async function(id){
 
 /* 本人的年度總回饋（960360 簽核後才開放：教師→自己的 360；學員→教師對學員） */
 api('api_my_annual', {}).then(r => { window.MY_ANNUAL = r || []; if(window.MY_ANNUAL.length && typeof render === 'function') render(); }).catch(() => { window.MY_ANNUAL = []; });
+
+/* 總覽「本月未授課課程」：所有人看全部 */
+api('api_month_courses', {}).then(r => { window.MONTH_ALL = r || []; if(typeof render === 'function' && (location.hash||'#home').replace('#','').split('?')[0] in {'':1,'home':1}) render(); }).catch(() => {});
 
 /* 年度總回饋與簽核：存回資料庫（簽核限 960360，資料庫端也會檢查） */
 if(me.admin){
