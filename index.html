@@ -1287,7 +1287,7 @@ function qpForm(student,stage,pending){
     <p>訓練課程類別：<u>　${esc(stage)}　</u></p>
     <p>訓練期間：<u>&nbsp;${A[0]}&nbsp;</u>年<u>&nbsp;${A[1]}&nbsp;</u>月<u>&nbsp;${A[2]}&nbsp;</u>日至<u>&nbsp;${B[0]}&nbsp;</u>年<u>&nbsp;${B[1]}&nbsp;</u>月<u>&nbsp;${B[2]}&nbsp;</u>日</p>
     <table class="qp-t"><thead><tr><th style="width:21%">課程名稱</th><th style="width:17%">原課程時間<br>――――<br>異動後時間</th><th style="width:23%">異動原因說明</th><th>學員</th><th>授課教師</th><th>教學品保組</th></tr></thead>
-    <tbody>${rows.map(({x,c})=>`<tr><td>${esc(c.name)}<div class="qp-id">${x.id}</div></td><td class="qp-c">${rocD(x.oldD)} ${x.oldT}<hr>${rocD(x.newD)} ${x.newT}</td><td>${esc(x.reason)}</td><td class="qp-c">${signOf(x,'s')}</td><td class="qp-c">${signOf(x,'t')}</td><td class="qp-c">${signOf(x,'q')}</td></tr>`).join('')}
+    <tbody>${rows.map(({x,c})=>`<tr><td>${esc(c.name)}<div class="qp-id">${String(x.id).replace(/^QP-/,'')}</div></td><td class="qp-c">${rocD(x.oldD)} ${x.oldT}<hr>${rocD(x.newD)} ${x.newT}</td><td>${esc(x.reason)}</td><td class="qp-c">${signOf(x,'s')}</td><td class="qp-c">${signOf(x,'t')}</td><td class="qp-c">${signOf(x,'q')}</td></tr>`).join('')}
     ${'<tr class="qp-empty"><td></td><td></td><td></td><td></td><td></td><td></td></tr>'.repeat(pad)}
     <tr><td colspan="6" class="qp-note">備註：${rows.length?`本表由系統於 ${rocDT(TODAY)} 依線上 QP019-15 申請紀錄產生，共 ${rows.length} 筆${pending?'（含簽核中案件）':'（僅列兩關核准案件）'}；簽核欄為線上電子簽核紀錄。`:'此階段沒有符合條件的異動紀錄。'}</td></tr></tbody></table>
     <p class="qp-small" style="margin-top:10px">*若因故無法如期完成訓練課程時，學員和負責訓練臨床教師必須擇日補課，若執行有困難時，得報請導師、管理階層、教學醫檢師、計畫主持人協調解決。</p>
