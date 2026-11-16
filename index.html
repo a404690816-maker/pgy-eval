@@ -508,6 +508,13 @@ a.pb-cell-link{color:var(--info)} text.pb-click:hover{fill:var(--sage-deep)}
   .pb-x .pb-table th.n{min-width:2.6em}
   .pb-x .pb-table td:first-child .pb-tag{display:block;width:max-content;margin:2px 0 0;font-size:10.5px}
 }
+/* 各核心對應題目：預設收合 */
+summary.pb-coremap-h{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px}
+summary.pb-coremap-h::-webkit-details-marker{display:none}
+summary.pb-coremap-h::before{content:'▸';font-size:12px;transition:transform .15s}
+details.pb-coremap[open]>summary.pb-coremap-h::before{transform:rotate(90deg)}
+.pb-coremap-t{font-weight:400;font-size:12px;color:var(--muted)}
+details.pb-coremap[open] .pb-coremap-t{display:none}
 
 .login-page{max-width:1240px;margin:0 auto;padding:28px 24px 40px}
 .login-hero{display:grid;grid-template-columns:1.05fr 1fr;min-height:min(680px,calc(100vh - 130px));background:var(--card);border:1px solid var(--line);border-radius:28px;overflow:hidden;box-shadow:var(--shadow)}
@@ -2821,7 +2828,7 @@ function coreMapNote(k){
     if(PB.ver==='old'){ items=OLDQ[k].map((o,j)=>[j,o]).filter(([j,o])=>o[1]&&splitC(qsNew[o[1]-1][1]).includes(c)).map(([j])=>`${j+1}. ${short(OLD_FULL[k][j].replace(/^您對這位學生/,'').replace(/(之|的)?滿意度為？?$|之滿意度$/,''),22)}`); }
     else { items=qsNew.map((q,i)=>[i,q]).filter(([i,q])=>splitC(q[1]).includes(c)).map(([i,q])=>`${i+1}. ${short(q[0].replace(/。$/,''),22)}`); }
     return `<li><b>${c}</b>（${items.length} 題）：${items.join('；')||'—'}</li>`; });
-  return `<div class="pb-coremap"><div class="pb-coremap-h">各核心對應題目${PB.ver==='old'?'（舊版題目依對照表歸類）':''}</div><ul>${lines.join('')}</ul><p class="pb-note">分數＝該核心對應題目的平均；只有 1 題的核心數值波動較大。此為教學回饋，不等同 QP017-18 醫事檢驗師核心能力里程碑評估表。</p></div>`;
+  return `<details class="pb-coremap"><summary class="pb-coremap-h">各核心對應題目${PB.ver==='old'?'（舊版題目依對照表歸類）':''}<span class="pb-coremap-t">點開查看</span></summary><ul>${lines.join('')}</ul><p class="pb-note">分數＝該核心對應題目的平均；只有 1 題的核心數值波動較大。此為教學回饋，不等同 QP017-18 醫事檢驗師核心能力里程碑評估表。</p></details>`;
 }
 
 /* ============ 回饋分兩部分：相關回饋＋年度總回饋（AI 生成） ============ */
