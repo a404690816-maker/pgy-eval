@@ -979,7 +979,7 @@ function pForms(){
     <div class="stack">${groups[k].map(t=>`
       <div class="task ${t.status==='done'?'done':''}">
         <div class="ico" style="background:${t.survey==='t360'?'var(--coral-soft);color:#A9472F':'var(--sage-soft);color:var(--sage-deep)'}">${t.survey==='t360'?'360':t.survey==='t2s'?'評':t.survey==='course'?'課':t.survey==='mentor'?'導':'eP'}</div>
-        <div><b>${esc(t.target)}</b>${t.teacherName?`<span class="small muted">・授課教師 ${esc(t.teacherName)}</span>`:''}<div class="small muted">${esc(t.period)}・評核身分：${esc(t.raterRole)}${/代填/.test(t.teams||'')&&t.rater?`：${esc(t.rater)}（代填）`:''}</div><div class="xs muted">截止 ${t.due.replaceAll('-','/')}</div></div>
+        <div><b>${esc(t.target)}</b>${t.teacherName?`<span class="small muted">・授課教師 ${esc(t.teacherName)}</span>`:''}<div class="small muted">${esc(t.period)}・評核身分：${esc(t.raterRole)}${/代填/.test(t.teams||'')&&t.rater?`：${esc(t.rater)}`:''}</div><div class="xs muted">截止 ${t.due.replaceAll('-','/')}</div></div>
         ${t.status==='done'?'<span class="pill good">已完成</span>':`<button class="btn sm coral" onclick="startTask('${t.id}')">開始填答</button>`}
       </div>`).join('')}</div>`).join('')}
     ${done===mine.length?'<div class="note" style="margin-top:16px">本批次問卷已全部完成，謝謝你。</div>':''}`;
@@ -997,7 +997,7 @@ function renderSurvey(){
   const t=TASKS.find(x=>x.id===STATE.openTask), s=SURVEYS[t.survey], st=STATE.step;
   const n=Object.keys(STATE.answers).length, qn=Object.keys(STATE.qual).length;
   const statusPill = s.status==='confirmed' ? '<span class="pill good">定稿版本</span>' : s.status==='agreed' ? '<span class="pill sage">討論版本</span>' : '<span class="pill warn">含 Claude 草案文字</span>';
-  const info=[['評核對象',t.target],['評核對象所屬部門',t.targetDept],['本次評核所屬組別',t.evalGroup],['評核身分',/代填/.test(t.teams||'')&&t.rater?`${t.raterRole}：${t.rater}（由 ${(ROLES[STATE.role]&&ROLES[STATE.role].person&&ROLES[STATE.role].person.name)||'管理者'} 代填）`:t.raterRole],[t.survey==='course'?'課程階段':'評核期間',t.survey==='t360'&&t.students?t.period.replace(/（學員：.*）$/,''):t.period],...(t.survey==='t360'&&t.students?[['對應學員',t.students]]:[]),['截止日期',t.due.replaceAll('-','/')]];
+  const info=[['評核對象',t.target],['評核對象所屬部門',t.targetDept],['本次評核所屬組別',t.evalGroup],['評核身分',/代填/.test(t.teams||'')&&t.rater?`${t.raterRole}：${t.rater}`:t.raterRole],[t.survey==='course'?'課程階段':'評核期間',t.survey==='t360'&&t.students?t.period.replace(/（學員：.*）$/,''):t.period],...(t.survey==='t360'&&t.students?[['對應學員',t.students]]:[]),['截止日期',t.due.replaceAll('-','/')]];
   if(t.survey==='course') info.splice(1,0,['授課教師',t.teacherName]);
   let body='';
   if(st===0){
