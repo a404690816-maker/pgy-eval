@@ -3158,6 +3158,9 @@ const rcByDb = {}; RC.forEach(c => { rcByDb[c.dbid] = c; });
     log: (x.log || []).map(l => ({ ...l, at: new Date(l.at) })) });
 });
 
+/* 送出後在背景更新統計資料（不必重新整理頁面） */
+async function refreshSurveys(){ try{ const d = await api('api_bootstrap', {}); ['t360','course','t2s','mentor','ep'].forEach(k => { if(!SVR[k]) SVR[k] = []; SVR[k].splice(0, SVR[k].length, ...(d[k] || []).map(r => ({ ...r, s:(r.s || []).map(Number) }))); }); }catch(e){} }
+window.refreshSurveys = refreshSurveys;
 /* 送出問卷 → 資料庫 */
 window.submitTask = async function(){
   const t = TASKS.find(x => x.id === STATE.openTask);
@@ -3166,7 +3169,7 @@ window.submitTask = async function(){
   const scores = s.qs.map((q,i) => STATE.answers[i]);
   try{
     await api('api_submit', { task: t.id, answers: { scores, qual: STATE.qual, extra: STATE.extra || '', feedback: STATE.extra || '' } });
-    t.status = 'done'; STATE.openTask = null; render(); window.scrollTo(0,0); toast('已送出，謝謝您的填答');
+    t.status = 'done'; STATE.openTask = null; render(); window.scrollTo(0,0); toast('已送出，謝謝您的填答'); refreshSurveys();
   }catch(e){ fail(e); }
 };
 
