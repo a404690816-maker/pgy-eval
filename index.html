@@ -1903,7 +1903,7 @@ function stageTeachers(stage){
 const STAGES_360 = () => [...new Set(RC.filter(c=>SENDS(c)&&c.teacher&&c.sv.some(s=>s.includes('360'))).map(c=>c.stage))];
 let ASSIGN = {stage:'共通醫學檢驗', rows:null, sent:{}};
 /* 115 年度：資歷較淺者（職級「醫檢師」）及龔柏誠暫不擔任 360 評核者（11/9 指示） */
-const NO_360_RATER = ['龔柏誠'];
+const NO_360_RATER = ['龔柏誠','朱棣文'];   // 朱棣文、黃薏君尚非臨床教師（11/22）；黃薏君職級「醫檢師」已排除
 const can360Rate = p => p.rank!=='醫檢師' && !NO_360_RATER.includes(p.n);
 const peerPool = me => REAL.roster.filter(p=>p.role==='教師' && p.g360===me.g360 && p.n!==me.n && !p.sup && can360Rate(p));
 function autoAssign(stage){
