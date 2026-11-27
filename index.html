@@ -2067,10 +2067,10 @@ function readGradeFile(f){
   fr.onload=async e=>{ try{
     const book=await readXlsx(e.target.result), rows=sheetToObjects(Object.values(book)[0]||[]);
     const studs=new Set(STUD_NAMES());
-    const toYM=v=>{ if(typeof v==='number'){ const d=new Date(Math.round((v-25569)*864e5)); return d.toISOString().slice(0,7); } return String(v||'').replace(/\D/g,'-').slice(0,7); };
+    const toYM=v=>{ if(typeof v==='string'&&/^\d{5}(\.\d+)?$/.test(v.trim())) v=Number(v); if(typeof v==='number'){ const d=new Date(Math.round((v-25569)*864e5)); return d.toISOString().slice(0,7); } return String(v||'').replace(/\D/g,'-').slice(0,7); };
     const inc=rows.filter(r=>r['學員姓名']).map((r,i)=>({row:i+2,m:toYM(r['日期']),stu:String(r['學員姓名']).trim(),stage:String(r['課程階段']||'').trim(),dept:r['課程部門']||'',course:String(r['課程名稱']||'').trim(),teacher:String(r['臨床教師']||'').trim(),kind:r['資料類型']||'',type:r['考核類型']||(r['資料類型']==='心得'?'心得':''),res:r['考核結果']===''?'':(isNaN(Number(r['考核結果']))?String(r['考核結果']):Number(r['考核結果'])),note:r['備註']||'',st:r['狀態']||'',std:r['通過標準']===''?'':(isNaN(Number(r['通過標準']))?String(r['通過標準']):Number(r['通過標準']))}));
     const curK=gKeyList(RG), idx=new Map(curK.map((k,i)=>[k,RG[i]])), incK=gKeyList(inc);
-    const plan=inc.map((g,i)=>{ if(!studs.has(g.stu)) return {act:'錯誤',g,why:`名單找不到學員「${g.stu}」`}; const c=idx.get(incK[i]); if(!c) return {act:'新增',g}; const d=[]; if(String(c.res)!==String(g.res)) d.push(`結果 ${c.res===''?'—':c.res} → ${g.res===''?'—':g.res}`); if(c.st!==g.st) d.push(`狀態 ${c.st} → ${g.st}`); const sv=v=>v==null?'':String(v); if(sv(c.std)!==sv(g.std)) d.push(`通過標準 ${sv(c.std)||'—'} → ${sv(g.std)||'—'}`); if(g.teacher&&sv(c.teacher)!==sv(g.teacher)) d.push(`教師 ${sv(c.teacher)||'—'} → ${g.teacher}`); if(sv(c.note)!==sv(g.note)) d.push('備註更新'); return d.length?{act:'更新',g,cur:c,why:d.join('；')}:{act:'不變',g}; });
+    const plan=inc.map((g,i)=>{ if(!studs.has(g.stu)) return {act:'錯誤',g,why:`名單找不到學員「${g.stu}」`}; const c=idx.get(incK[i]); if(!c) return {act:'新增',g}; const d=[]; if(String(c.res)!==String(g.res)) d.push(`結果 ${c.res===''?'—':c.res} → ${g.res===''?'—':g.res}`); if(c.st!==g.st) d.push(`狀態 ${c.st} → ${g.st}`); const sv=v=>v==null?'':String(v); if(sv(c.std)!==sv(g.std)) d.push(`通過標準 ${sv(c.std)||'—'} → ${sv(g.std)||'—'}`); if(g.teacher&&sv(c.teacher)!==sv(g.teacher)) d.push(`教師 ${sv(c.teacher)||'—'} → ${g.teacher}`); if(sv(c.note)!==sv(g.note)) d.push('備註更新'); if(g.m&&sv(c.m)!==sv(g.m)) d.push(`年月 ${sv(c.m)||'—'} → ${g.m}`); return d.length?{act:'更新',g,cur:c,why:d.join('；')}:{act:'不變',g}; });
     GIMP={file:f.name,plan};
     const n=k=>plan.filter(x=>x.act===k).length;
     openModal(`<h2>匯入評核成績：${esc(f.name)}</h2><p class="small muted">共 ${inc.length} 列。比對方式：學員＋課程階段＋課程名稱＋考核類型（同一課程多份 DOPS 依出現順序對應）。</p>
@@ -2081,7 +2081,7 @@ function readGradeFile(f){
   fr.readAsArrayBuffer(f);
 }
 function commitGradeImport(){
-  let a=0,u=0; GIMP.plan.forEach(x=>{ if(x.act==='新增'){ RG.push(x.g); a++; } if(x.act==='更新'){ Object.assign(x.cur,{res:x.g.res,st:x.g.st,std:x.g.std,teacher:x.g.teacher||x.cur.teacher,note:x.g.note}); u++; } });
+  let a=0,u=0; GIMP.plan.forEach(x=>{ if(x.act==='新增'){ RG.push(x.g); a++; } if(x.act==='更新'){ Object.assign(x.cur,{res:x.g.res,st:x.g.st,std:x.g.std,teacher:x.g.teacher||x.cur.teacher,note:x.g.note,m:x.g.m||x.cur.m}); u++; } });
   STATE.audit.unshift({at:nowStamp(),who:ROLES[STATE.role].person.name,act:'評核成績匯入',detail:`${GIMP.file}：新增 ${a}、更新 ${u}`});
   closeModal(); render(); toast(`已寫入：新增 ${a}、更新 ${u}`);
 }
